@@ -1,5 +1,5 @@
-<div style="height: 50%;" [hidden]="!entrenamientoLocations">
-    <div  style="height: 100%;" id="map_calendar">
+<div  [hidden]="!verMapa">
+    <div   id="map_calendar">
      
         
          
@@ -48,7 +48,12 @@
 
   </mat-menu>
 </div>
-
+<div *ngIf="!Entrenamientos.length">
+  <mat-card>
+  <h2>Aun no hay registros!</h2>
+  </mat-card>
+</div>
+<div style="height:200px;overflow-y: scroll;" id="listContainer">
 <div style="margin: 5px;" *ngFor="let entrenamiento of Entrenamientos;let i = index">
 <mat-card class="example-card" >
     <!-- <mat-card-header>
@@ -79,7 +84,7 @@
         </button>
         <button mat-button mat-raised-button (click)="view(entrenamiento,i)" *ngIf="!entrenamiento.play"  color="accent">
             <mat-icon mat-list-icon>visibility</mat-icon>
-            <span>Ver Entrenamiento</span>            
+            <span>Ver</span>            
         </button>
         <button mat-button mat-raised-button (click)="stopPaintGhost(entrenamiento)" *ngIf="entrenamiento.play"  color="primary">
             <mat-icon mat-list-icon>visibility_off</mat-icon>
@@ -91,4 +96,5 @@
       
     </mat-card-actions>
   </mat-card>
+</div>
 </div>

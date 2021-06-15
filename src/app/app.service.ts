@@ -69,6 +69,7 @@ export class AppService implements OnInit {
     private subjectLocation = new Subject<any>();
     private subjectSteps = new Subject<any>();
     private subjectEntrenamiento=new Subject<any>();
+    private subjetTitle =new Subject<any>();
     public entrenamiento:any;
     public Entrenamientos=[];
     constructor(
@@ -208,7 +209,7 @@ export class AppService implements OnInit {
         return true;
       }
       if(quien && es && nombre){
-        this.textToSpeech("Que onda "+nombre+"!,dejá eso y tirate un pedo!");
+        this.textToSpeech("Que onda "+nombre+"!,dejá eso!");
         return true;
       }
 
@@ -230,13 +231,13 @@ export class AppService implements OnInit {
               let si=false;
               text.forEach((element:String) => {
                   if(editDistance('quién es perches',element)<2){
-                      this.textToSpeech("Perches, es mi amigo Gay");
+                      this.textToSpeech("Perches, es mi amigo");
                       si=true;
                       return;
                   }
                   else 
                   if(editDistance('quién es fede',element)<2){
-                      this.textToSpeech("Fede, es mi amigo Gay");
+                      this.textToSpeech("Fede, es mi amigo");
                       si=true;
                   }
                   else 
@@ -280,6 +281,12 @@ export class AppService implements OnInit {
     sendEntrenamiento(action) {
       this.subjectEntrenamiento.next({ info:this.entrenamiento, action:action });
   }
+  sendTitle(action) {
+    setTimeout(() => {
+      
+      this.subjetTitle.next({ title:action });
+    }, 1);
+}
     clearMessages() {
         this.subjectLocation.next();    
     }
@@ -287,6 +294,9 @@ export class AppService implements OnInit {
     onStepsChange(): Observable<any> {
         return this.subjectSteps.asObservable();
     }
+    onTitleChange(): Observable<any> {
+      return this.subjetTitle.asObservable();
+  }
     onEntrenamientoChange(): Observable<any> {
       return this.subjectEntrenamiento.asObservable();
   }
@@ -321,7 +331,7 @@ export class AppService implements OnInit {
           distanceFilter: 2,
           notificationsEnabled:true,
           notificationTitle: 'Seguimiento en segundo plano',
-          notificationText: '00:00:00',
+          notificationText: '',
           debug: true,
           interval: 2000,
           fastestInterval: 3000,
@@ -333,6 +343,12 @@ export class AppService implements OnInit {
            
             //('Vel: '+(data.speed).toFixed(2)+'M/s Prom:'+(this.velocidad_promedio/index).toFixed(2)+'M/s Dist:'+(this.velocidad_promedio*3.6/1000).toFixed(2)+'Km')
             this.sendLocation(location);
+            if(!this.entrenamiento.started){
+              //Auto Stop 
+              this.stopBackGroundGeoLocation();
+              return;
+            } 
+
             this.entrenamiento.Locations.push(location);
             let index=0;
             this.entrenamiento.velocidad_promedio=0;
@@ -419,7 +435,8 @@ export class AppService implements OnInit {
             var successHandler = (pedometerData)=> {
              // this.sendSteps(pedometerData);
               console.log(pedometerData);
-              this.entrenamiento.pasos=pedometerData.numberOfSteps;              
+              if(this.entrenamiento.started && !this.entrenamiento.paused)
+                this.entrenamiento.pasos=pedometerData.numberOfSteps;              
              
           };
           var onError=(e)=>{
@@ -458,7 +475,7 @@ export class AppService implements OnInit {
           if (status !== BackgroundGeolocation.AUTHORIZED) {
             // we need to set delay or otherwise alert may not be shown
             setTimeout(function() {
-              var showSettings = confirm('App requires location tracking permission. Would you like to open app settings?');
+              var showSettings = confirm('Mis Actividades requiere de Ubicación. Ir a configuración?');
               if (showSettings) {                
                 return BackgroundGeolocation.showAppSettings();
               }
@@ -481,15 +498,15 @@ export class AppService implements OnInit {
         });
       }
 
-      getEntrenamientos(location?){
+      getEntrenamientos(location?,onlyInArea?:boolean){
         let tmp=this.localSt.retrieve('entrenamientos');
         let Entrenamientos=[];
-        tmp.forEach(element => {
+        tmp.forEach(entrenamiento => {
         //  if(element.distancia)
-            Entrenamientos.push(element );
+  /*           Entrenamientos.push(element );
         });
        
-       Entrenamientos.forEach(entrenamiento => {
+       Entrenamientos.forEach(entrenamiento => { */
          let fecha=new Date(entrenamiento.start);
          entrenamiento.fecha=moment(fecha).format('LL');
          entrenamiento.fecha_corta=moment(fecha).format('MMM D');
@@ -526,6 +543,15 @@ export class AppService implements OnInit {
          entrenamiento.distancia=kmTotales.toFixed(2)+'Km';
          //entrenamiento.velocidad=entrenamiento.velocidad_promedio/3.6;
          entrenamiento.velocidad=(entrenamiento.velocidad_promedio/1000*3.6).toFixed(2)+' K/h';
+         if(onlyInArea==true){
+          if(entrenamiento.inArea==true){
+            Entrenamientos.push(entrenamiento);
+          }
+         }
+         else{
+          Entrenamientos.push(entrenamiento);
+         }
+        
         
        });
        console.log(Entrenamientos);

@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { AppService } from './app.service';
 import { LocalStorageService } from 'ngx-webstorage';
 import { ActivatedRoute,  Router } from '@angular/router';
@@ -10,8 +10,9 @@ declare var navigator;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit,OnDestroy {
+export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
   title = 'jMaps';
+  pageTitle="Inicio";
   public appService:AppService;
   constructor(
     @Inject(AppService) appService: AppService,
@@ -21,12 +22,18 @@ export class AppComponent implements OnInit,OnDestroy {
   ){
     this.appService=appService;
   }
+  ngAfterViewInit(){
+    this.appService.onTitleChange().subscribe(obj=>{
+      this.pageTitle=obj.title;
+    })
+  }
   ngOnDestroy(){
     console.log('Destroy app component');
   }
   List=[];
   ngOnInit(){
     //for Test
+  
     
     //window.plugins.insomnia.allowSleepAgain()
     console.log("appStart");
@@ -37,6 +44,7 @@ export class AppComponent implements OnInit,OnDestroy {
     let parent=this;
     document.addEventListener("deviceready", ()=> {
       console.log(parent);
+      
       document.addEventListener("backbutton", (onBackKeyDown)=>{
         console.log(onBackKeyDown);
         console.log(parent);
@@ -86,10 +94,14 @@ export class AppComponent implements OnInit,OnDestroy {
     this.appService.textToSpeech(que);
   }
   escuchar(){
-this.appService.Escuchar();
+    alert("Funcion desactivada.");
+    //this.appService.Escuchar();
   } 
   parar(){
     this.appService.Parar();
   } 
+  exit(){
+    navigator.app.exitApp();
+  }
 
 }

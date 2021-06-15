@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { AppService } from '../app.service';
 import * as moment from 'moment';
 import { tileLayer, latLng,marker,icon } from 'leaflet';
@@ -11,9 +11,10 @@ moment.locale('es-us');
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss']
 })
-export class CalendarComponent implements OnInit,OnDestroy {
+export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
   Entrenamientos= [];
   entrenamientoLocations;
+  verMapa:boolean=false;
   map;
   SliderValue=0; 
   //url='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
@@ -38,6 +39,12 @@ export class CalendarComponent implements OnInit,OnDestroy {
       this.SliderChange(e);
       this.SliderChanging=false;
     }, 250);
+   }
+   ngAfterViewInit(){
+     this.verMapa=true;
+     setTimeout(() => {
+      this.drawMap();
+     }, 200);
    }
    ngOnDestroy(){
     clearInterval(this.MapInterval);
@@ -124,9 +131,16 @@ export class CalendarComponent implements OnInit,OnDestroy {
     
    });
   }
+  mapHeight=300;
+  listContainerHeight=200;
   ngOnInit(): void {
     this.Entrenamientos=this.appService.getEntrenamientos();
-   this.drawMap();
+   //this.drawMap();
+   //this.mapHeight=window.innerHeight-600;
+   this.listContainerHeight=window.innerHeight;
+   document.getElementById("map_calendar").style.height=this.mapHeight+'px';
+   document.getElementById("listContainer").style.height=this.listContainerHeight+'px';
+   this.appService.sendTitle("Histórico");
    this.appService.onEntrenamientoChange().subscribe(data=>{
     console.log(data);
     switch(data.action){

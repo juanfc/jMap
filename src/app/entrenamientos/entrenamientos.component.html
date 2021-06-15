@@ -13,6 +13,9 @@
       </div>
       <img class="CompassFondo" src="assets/compassFondo.svg">
       <img id="agujas" class="CompassAgujas" src="assets/brujula.svg">
+      
+
+      
       <mat-menu #menuEnt="matMenu" >
         
 
@@ -24,8 +27,8 @@
               </mat-card-header> -->
               
               
-              <button *ngIf="!EntrenamientosHistory.length" mat-menu-item color="accent"  (click)="getEntrenamientosHistory()">                
-                <mat-icon class="icon-border">hiking</mat-icon>
+              <button *ngIf="!EntrenamientosHistory.length" mat-menu-item color="accent"  (click)="getEntrenamientosHistory($event)">                
+                <mat-icon class="icon-border">preview</mat-icon>
                 Mostrar entrenamientos
               </button>
                 <button mat-menu-item color="accent" *ngFor="let entrenamiento of EntrenamientosHistory" (click)="setGhost(entrenamiento)">
@@ -36,14 +39,9 @@
                   <mat-icon style="position: absolute;right:0px;top:12px;" *ngIf="entrenamiento.inArea" class="icon-border">radio_button_checked</mat-icon>
                 </button>        
                 
-                
-                
-                
-              
-              
-            
               
         </mat-menu>
+      
 
       <mat-menu #menu="matMenu">
 
@@ -69,7 +67,7 @@
             </button>
       </mat-menu>
 </div>
-<div style="position: absolute;
+<div style="
 width: 100%;
 bottom: 0;">
   <mat-card class="example-card">

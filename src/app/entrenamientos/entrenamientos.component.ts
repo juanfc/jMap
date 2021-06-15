@@ -16,6 +16,7 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
   seguirLimites:boolean=true;
   private appService:AppService;
   TimeCurrentLocation;
+  backGroundLocation;
   tiempoEntrenamiento="00:00:00"
   Locations=[]
   EntrenamientosHistory=[]
@@ -66,19 +67,65 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
     this.map.remove();
     this.drawMap();
     this.Locations=[];
-    this.appService.setEntrenamientoStart();    
     if(this.ghostLocations)
       this.startPaintGhost();
+    this.appService.setEntrenamientoStart();    
     
   }
   ghostInfo="";
   clearGhost(){
     this.ghostLocations=[];
     this.ghostInfo="";
+    this.map.remove();   
+    this.drawMap();
+
   }
+  ArrGhost=[];
   setGhost(entrenamiento){
+    console.log(entrenamiento);
     this.ghostLocations=entrenamiento.Locations;
-    this.ghostInfo=entrenamiento.fecha_corta+' Distancia:'+entrenamiento.distancia;
+    this.ghostInfo=entrenamiento.fecha_corta+' Distancia:'+entrenamiento.distancia+' Tiempo:'+entrenamiento.tiempo;
+    this.previewPathGhost();
+  }
+  previewPathGhost(){
+    this.map.remove();   
+    this.drawMap();
+    this.ArrGhost=[];
+    for(let x=0;x<this.ghostLocations.length;x++){
+      let element = this.ghostLocations[x];
+      if(x==0){
+       let mark= L.marker([element.latitude,element.longitude],{        
+          title:'Inicio',
+          icon: icon({
+            iconSize: [ 25, 41 ],
+            iconAnchor: [ 13, 41 ],
+            iconUrl: 'assets/marker-icon-ghost_green.png',
+            // shadowUrl: 'assets/marker-shadow.png'
+          }),
+        }).addTo(this.map);
+        mark.bindTooltip('🏳Inicio🏳').openTooltip();
+      }
+      if(element.latitude &&element.longitude)
+        this.ArrGhost.push(new L.LatLng(element.latitude,element.longitude));
+      let polyline;
+      //if(this.ArrGhost.length==2){
+        //        this.ArrGhost=[this.ArrGhost[1]];
+        //}
+        if((x+1)==this.ghostLocations.length){
+          let mark= L.marker([element.latitude,element.longitude],{        
+            title:'Inicio',
+            icon: icon({
+              iconSize: [ 25, 41 ],
+              iconAnchor: [ 13, 41 ],
+              iconUrl: 'assets/marker-icon-ghost_green.png',
+              // shadowUrl: 'assets/marker-shadow.png'
+            }),
+          }).addTo(this.map);
+          mark.bindTooltip('🏁Fin🏁').openTooltip();
+          polyline=L.polyline(this.ArrGhost, {color: 'gray',weight: 5,opacity: 0.6}).addTo(this.map);
+         this.map.fitBounds(polyline.getBounds());
+       }
+    }
   }
 
   stopEntrenamiento(){
@@ -93,14 +140,16 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
  layer;
  currentLocation;
  lastPosition;
+
  getCurrentLocation(){
+  console.log("getCurrentPosition");
   navigator.geolocation.getCurrentPosition((p)=>{
     this.currentLocation=p.coords;
     if(!this.lastPosition) 
       this.lastPosition={latitude:0,longitude:0};
     let mts=this.appService.getDistanceFromLatLonInKm(this.lastPosition.latitude,this.lastPosition.longitude,this.currentLocation.latitude,this.currentLocation.longitude)*1000;
     if(mts>50)
-      this.EntrenamientosHistory= this.appService.getEntrenamientos(this.currentLocation);
+      this.EntrenamientosHistory= this.appService.getEntrenamientos(this.currentLocation,true);
     
       this.lastPosition=p.coords;
     console.log(p)
@@ -119,10 +168,10 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
 }
 
   ngOnInit(): void {
-    this.mapHeight=window.innerHeight-200;
+    this.mapHeight=window.innerHeight-205;
     document.getElementById("map").style.height=this.mapHeight+'px';
     this.entrenamiento=this.appService.getEntrenamiento();
-
+    this.appService.sendTitle("Entrenamientos");
     this.Locations =this.appService.getEntrenamiento('Locations');
     
 
@@ -167,7 +216,18 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
       this.entrenamiento=data.info;
     });
 
+    
+
+    if(!this.entrenamiento.started){
+
+      this.appService.startBackGroundGeoLocation();
+      
+    }
     this.appService.onLocationChange().subscribe(data=>{
+      this.backGroundLocation=data.info;
+      if(!this.entrenamiento.started)
+        return;
+      
       console.log("Location:",data);
       this.Locations.push(data.info);
       if(data.info.speed)
@@ -175,9 +235,11 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
 
       this.dibuja();
     });
+
     this.appService.onStepsChange().subscribe(data=>{
       console.log("Steps:",data);
     });
+    
 setTimeout(() => {  
   this.getCurrentLocation(); //llama a Service GetEntrenamientos Si la posición cambia
 }, 1000);
@@ -186,6 +248,12 @@ setTimeout(() => {
       this.getCurrentLocation();
     }, 1000*60);
 
+  }
+  getEntrenamientosHistory(event){
+    this.EntrenamientosHistory= this.appService.getEntrenamientos();
+    event.preventDefault();
+    event.stopPropagation();
+    console.log(event);
   }
   stopPaintGhost(){
     //this.index=0;
@@ -202,9 +270,11 @@ setTimeout(() => {
   
   startPaintGhost(){
     clearInterval(this.MapInterval);
+    if(!this.ghostLocations.length)return;
     this.map.remove();
     this.arr=[];
     this.drawMap();
+    this.previewPathGhost();
     this.ghostMark="";
     this.ghostStartPos=0;
     this.index=0;

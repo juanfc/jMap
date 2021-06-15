@@ -1,2 +1,2 @@
 ng build --prod --aot
-cordova run android
+cordova build --release
