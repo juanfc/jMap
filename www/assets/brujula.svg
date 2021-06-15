@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 16.0.3, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Brújula_S"
+   x="0px"
+   y="0px"
+   width="800px"
+   height="800px"
+   viewBox="0 0 800 800"
+   enable-background="new 0 0 800 800"
+   xml:space="preserve"
+   sodipodi:docname="brujula.svg"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"><metadata
+   id="metadata78"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs76">
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</defs><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="2488"
+   inkscape:window-height="1016"
+   id="namedview74"
+   showgrid="false"
+   inkscape:zoom="0.59"
+   inkscape:cx="201.49197"
+   inkscape:cy="381.9538"
+   inkscape:window-x="72"
+   inkscape:window-y="27"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Brújula_S" />
+<symbol
+   id="elm"
+   viewBox="-300.5 -300.5 601 601">
+	<polygon
+   fill="#FFDD55"
+   stroke="#333"
+   stroke-linejoin="round"
+   points="0,300 30,30 300,0 30,-30 0,-300 -30,-30 -300,0 -30,30    "
+   id="polygon2" />
+	<polygon
+   fill="#806600"
+   stroke="#333"
+   points="0,300 30,30 0,0 30,-30 0,-300  "
+   id="polygon4" />
+	<polygon
+   fill="#806600"
+   stroke="#333"
+   points="300,0 30,-30 0,0 -30,-30 -300,0  "
+   id="polygon6" />
+	<line
+   fill="none"
+   stroke="#333"
+   x1="-30"
+   y1="30"
+   x2="0"
+   y2="0"
+   id="line8" />
+</symbol>
+<radialGradient
+   id="bg_blue"
+   cx="400"
+   cy="400"
+   r="225"
+   gradientUnits="userSpaceOnUse"
+   gradientTransform="translate(0,-800)">
+	<stop
+   offset="0"
+   style="stop-color:#39C"
+   id="stop11" />
+	<stop
+   offset="0.66"
+   style="stop-color:#39C;stop-opacity:0.5"
+   id="stop13" />
+	<stop
+   offset="1"
+   style="stop-color:#39C;stop-opacity:0"
+   id="stop15" />
+</radialGradient>
+
+
+
+
+
+
+
+<linearGradient
+   id="hl_S"
+   gradientUnits="userSpaceOnUse"
+   x1="550.0002"
+   y1="550"
+   x2="850.0002"
+   y2="550"
+   gradientTransform="rotate(90,550.0002,400)">
+	<stop
+   offset="0"
+   style="stop-color:#F00;stop-opacity:0"
+   id="stop31" />
+	<stop
+   offset="0.25"
+   style="stop-color:#F00;stop-opacity:0.5"
+   id="stop33" />
+	<stop
+   offset="1"
+   style="stop-color:#F00"
+   id="stop35" />
+</linearGradient>
+<g
+   id="g6709"><circle
+     transform="scale(1,-1)"
+     style="fill:url(#bg_blue)"
+     id="circle18"
+     r="225"
+     cy="-400"
+     cx="400" /><use
+     style="overflow:visible"
+     id="use20"
+     overflow="visible"
+     transform="matrix(0.7179,0.2974,-0.2974,0.7179,400,400)"
+     y="-300.5"
+     x="-300.5"
+     height="601"
+     width="601"
+     xlink:href="#elm" /><use
+     style="overflow:visible"
+     id="use22"
+     overflow="visible"
+     transform="matrix(0.7179,-0.2974,-0.2974,-0.7179,400,400)"
+     y="-300.5"
+     x="-300.5"
+     height="601"
+     width="601"
+     xlink:href="#elm" /><use
+     style="overflow:visible"
+     id="use24"
+     overflow="visible"
+     transform="matrix(0.6267,-0.6267,0.6267,0.6267,400,400)"
+     y="-300.5"
+     x="-300.5"
+     height="601"
+     width="601"
+     xlink:href="#elm" /><use
+     style="overflow:visible"
+     overflow="visible"
+     transform="translate(400,400)"
+     y="-300.5"
+     x="-300.5"
+     id="XMLID_1_"
+     height="601"
+     width="601"
+     xlink:href="#elm" /><polygon
+     style="fill:#ffff66;stroke:#333333;stroke-miterlimit:10"
+     transform="matrix(1,0,0,-1,0,800)"
+     id="polygon27"
+     points="370,370 400.001,100 400,400 100,400 "
+     stroke-miterlimit="10" /><line
+     style="fill:none;stroke:#333333;stroke-miterlimit:10"
+     id="line29"
+     y2="430"
+     x2="370"
+     y1="400"
+     x1="400"
+     stroke-miterlimit="10" /><polygon
+     transform="matrix(1,0,0,-1,0,800)"
+     style="fill:url(#hl_S)"
+     points="370,430 400,400 430,430 400,700 "
+     id="polygon38" /></g>
+
+</svg>

@@ -1,0 +1,126 @@
+<mat-drawer-container class="full-container" [hasBackdrop]="true">
+  <mat-drawer #drawer class="menu-container" [mode]="'Over'" (click)="drawer.toggle()">
+  
+    <mat-card class="menu-card">
+      <mat-card-header>
+        <div mat-card-avatar class="menu-header-image"></div>
+        <mat-card-title>Shiba Inu</mat-card-title>
+        <mat-card-subtitle>Dog Breed</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+      </mat-card-content>
+      <mat-card-actions>
+        
+        
+      </mat-card-actions>
+    </mat-card>
+        <mat-selection-list #shoes [multiple]="false">
+        
+          <mat-list-option [routerLink]="'/inicio'">
+            
+              <mat-icon  mat-list-icon>directions_run</mat-icon>
+              <span>Inicio</span>
+            
+          </mat-list-option>
+          <mat-list-option [routerLink]="'/entrenamientos'">
+            
+            <mat-icon  mat-list-icon>map</mat-icon>
+            <span>Entrenamiento</span>
+          
+        </mat-list-option>
+
+          <mat-list-option [routerLink]="'/calendar'">
+            
+            <mat-icon  mat-list-icon>history</mat-icon>
+            <span>Histórico de actividades</span>
+          
+        </mat-list-option>
+
+          <mat-list-option (click)="start()" *ngIf="!appService.getEntrenamiento('started')">
+            <mat-icon mat-list-icon>add</mat-icon>
+            <span>Iniciar Entrenamiento</span>     
+            <mat-divider></mat-divider>        
+          </mat-list-option>
+          <mat-list-option (click)="pause()" *ngIf="appService.getEntrenamiento('started') && !appService.getEntrenamiento('paused')">            
+            <mat-icon mat-list-icon>pause</mat-icon>
+            <span>Pausar Entrenamiento</span>            
+        </mat-list-option>
+
+        <mat-list-option (click)="pause()" *ngIf="appService.getEntrenamiento('started') && appService.getEntrenamiento('paused')">            
+          <mat-icon mat-list-icon>play_arrow</mat-icon>
+          <span>Reanudar Entrenamiento</span>            
+      </mat-list-option>
+
+          <mat-list-option (click)="stop()" *ngIf="appService.getEntrenamiento('started')">            
+              <mat-icon mat-list-icon>stop</mat-icon>
+              <span>Finalizar Entrenamiento</span>  
+              <mat-divider></mat-divider>           
+          </mat-list-option>
+    
+          <mat-list-option (click)="checkAuth()">
+            
+              <mat-icon mat-list-icon>settings</mat-icon>
+              <span>Configuración</span>
+            
+            
+          </mat-list-option>
+          
+
+
+          <mat-list-option (click)="escuchar()">
+
+            
+              <mat-icon mat-list-icon>mic</mat-icon>
+              <span>Comandos de voz</span>
+            
+
+          </mat-list-option>
+
+         
+
+          
+
+        </mat-selection-list>
+
+        
+       
+
+
+       
+
+
+
+
+
+
+   
+
+  </mat-drawer>
+  <mat-drawer-content>
+    <mat-toolbar color="primary">
+      <button  (click)="drawer.toggle()"  mat-icon-button class="menu-icon" aria-label="Example icon-button with menu icon">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+
+      <button mat-menu-item (click)="checkAuth()">
+        <mat-icon>voicemail</mat-icon>
+        <span>Check Auth</span>
+      </button>
+    </mat-menu>
+    <span>Entrenamientos</span>
+    <span class="example-spacer"></span>
+    <button mat-icon-button [matMenuTriggerFor]="menu" class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+      <mat-icon>favorite</mat-icon>
+    </button>
+    <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+      <mat-icon>share</mat-icon>
+    </button>
+  </mat-toolbar>
+ 
+  <router-outlet></router-outlet>
+    
+  </mat-drawer-content>
+</mat-drawer-container>
+

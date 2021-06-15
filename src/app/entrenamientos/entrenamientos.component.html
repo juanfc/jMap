@@ -1,0 +1,123 @@
+<div  id="map">
+     
+     <button class="mapButton" mat-mini-fab color="primary" aria-label="Example icon button with a menu icon" [matMenuTriggerFor]="menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      
+      <div class="mapFantasma" *ngIf="ghostInfo">
+       <div style="    right: -5px;position: absolute;top: -8px;"><button mat-icon-button (click)="clearGhost()"><mat-icon>close</mat-icon></button></div> 
+      <div class="centered-div">
+        <mat-icon>pets</mat-icon>
+        {{ghostInfo}}
+      </div>
+      </div>
+      <img class="CompassFondo" src="assets/compassFondo.svg">
+      <img id="agujas" class="CompassAgujas" src="assets/brujula.svg">
+      <mat-menu #menuEnt="matMenu" >
+        
+
+          
+          
+              <!-- <mat-card-header>
+                <mat-card-title></mat-card-title>
+                <mat-card-subtitle></mat-card-subtitle> 
+              </mat-card-header> -->
+              
+              
+              <button *ngIf="!EntrenamientosHistory.length" mat-menu-item color="accent"  (click)="getEntrenamientosHistory()">                
+                <mat-icon class="icon-border">hiking</mat-icon>
+                Mostrar entrenamientos
+              </button>
+                <button mat-menu-item color="accent" *ngFor="let entrenamiento of EntrenamientosHistory" (click)="setGhost(entrenamiento)">
+                  <mat-icon class="icon-border">hiking</mat-icon>
+                  {{entrenamiento.fecha_corta}}                
+                  {{entrenamiento.distancia}}       
+                  &nbsp;           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <mat-icon style="position: absolute;right:0px;top:12px;" *ngIf="entrenamiento.inArea" class="icon-border">radio_button_checked</mat-icon>
+                </button>        
+                
+                
+                
+                
+              
+              
+            
+              
+        </mat-menu>
+
+      <mat-menu #menu="matMenu">
+
+        <!-- (click)="startPaintGhost()" *ngIf="!MapInterval"  -->
+
+        <button mat-menu-item  [matMenuTriggerFor]="menuEnt">
+          <mat-icon>pets</mat-icon>
+          <span>Selecciona ruta Fantasma</span>
+        </button>
+        <button mat-menu-item (click)="stopPaintGhost()" *ngIf="MapInterval" >
+            <mat-icon>stop</mat-icon>
+            <span>Parar</span>
+          </button>
+        
+
+        <button mat-menu-item *ngIf="seguirLimites" (click)="seguirLimites=!seguirLimites">
+            <mat-icon>near_me_disabled</mat-icon>
+            <span>No seguir</span>
+          </button>
+          <button mat-menu-item *ngIf="!seguirLimites" (click)="seguirLimites=!seguirLimites">
+              <mat-icon>near_me</mat-icon>
+              <span>Seguir</span>
+            </button>
+      </mat-menu>
+</div>
+<div style="position: absolute;
+width: 100%;
+bottom: 0;">
+  <mat-card class="example-card">
+    <mat-card-header>
+      <!-- <mat-card-title>Entrenemos!</mat-card-title>
+      <mat-card-subtitle></mat-card-subtitle> -->
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div style=" display: flex;">
+        <div style=" font-size: 40px;padding-bottom: 20px;">{{tiempoEntrenamiento}}</div>        
+        <div style=" font-size: 30px;width:100%;text-align: right;">{{distanciaEntrenamiento}}</div>        
+      </div>
+      <div style=" display: flex;">
+        <div style=" font-size: 20px;">{{velocidadEntrenamiento}}</div>        
+        <div style="position: absolute; padding-right: 20px;; font-size: 20px;right:0;text-align: right;">{{pasosEntrenamiento}}</div>
+      </div>
+      
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-button mat-raised-button color="accent" (click)="startEntrenamiento()" *ngIf="entrenamiento && !entrenamiento.started">
+        <mat-icon mat-list-icon>add</mat-icon>
+        <span>Iniciar Entrenamiento</span>            
+      </button>
+      <div style=" display: flex;">
+        <div style="text-align: center;width: 100%;">
+
+          <button mat-button mat-raised-button  color="accent" (click)="pauseEntrenamiento()" *ngIf="entrenamiento && entrenamiento.started && !entrenamiento.paused">            
+            <mat-icon mat-list-icon>pause</mat-icon>
+            <span>Pausar</span>            
+          </button>
+
+          <button mat-button mat-raised-button  color="accent" (click)="pauseEntrenamiento()" *ngIf="entrenamiento && entrenamiento.started && entrenamiento.paused">            
+            <mat-icon mat-list-icon>play_arrow</mat-icon>
+            <span>Reanudar</span>            
+          </button>
+        </div>
+      <div style="text-align: center;width: 100%;">
+
+        <button mat-button mat-raised-button  color="warn" (click)="stopEntrenamiento()" *ngIf="entrenamiento && entrenamiento.started">            
+          <mat-icon mat-list-icon>stop</mat-icon>
+          <span>Finalizar</span>            
+        </button>
+      </div>
+        
+</div>
+        
+      
+    </mat-card-actions>
+  </mat-card>
+</div>

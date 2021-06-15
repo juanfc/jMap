@@ -1,0 +1,3 @@
+keytool -genkey -v -keystore com.actualsoft.jmap.keystore -alias com.actualsoft.jmap -keyalg RSA -keysize 2048 -validity 10000
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore com.actualsoft.jmap.keystore  platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk  com.actualsoft.jmap
+zipalign -v 9 platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk misactividades.apk

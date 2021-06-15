@@ -1,0 +1,94 @@
+<div style="height: 50%;" [hidden]="!entrenamientoLocations">
+    <div  style="height: 100%;" id="map_calendar">
+     
+        
+         
+         <img class="CompassFondo" src="assets/compassFondo.svg">
+         <img id="agujasRep" class="CompassAgujas" src="assets/brujula.svg">
+
+   </div>
+</div>
+<div *ngIf="entrenamientoLocations">
+    <div style="position: absolute;">{{startTime}}</div>    
+    <div style="position: absolute;left:40%">{{ghostTimeStr}}</div>    
+    
+    <div style="position: absolute;right: 13%;">{{endTime}}</div>
+    <!-- [displayWith]="formatLabel" 
+        [thumbLabel]="true"
+        (change)="SliderChange($event)"
+    -->
+    <mat-slider
+    
+    style="width: 85%;z-index: 20000;"
+    [disabled]="false"
+    [invert]="false"
+    
+    [max]="entrenamientoLocations.length"
+    [ngModel]="SliderValue"
+    (input)="inputSlider($event)"
+    (onTouched)="onTouched($event)"
+    [min]="1"
+    [step]="1"
+    [tickInterval]="1"
+    
+    [vertical]="false"
+    aria-labelledby="example-name-label">
+</mat-slider>
+<button style="position: absolute;right: 10px;     margin-top: 5px;" mat-mini-fab color="primary" aria-label="Example icon button with a menu icon" [matMenuTriggerFor]="menu">
+    <mat-icon>speed</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+
+      
+
+    <button mat-menu-item *ngFor="let x of [1,8,16,32,50]" (click)="this.ghostSpeed=x">
+      <mat-icon>fast_forward</mat-icon>
+      <span>Velocidad x {{x}}</span>
+    </button>
+
+  </mat-menu>
+</div>
+
+<div style="margin: 5px;" *ngFor="let entrenamiento of Entrenamientos;let i = index">
+<mat-card class="example-card" >
+    <!-- <mat-card-header>
+       <mat-card-title></mat-card-title>
+      <mat-card-subtitle></mat-card-subtitle> 
+    </mat-card-header> -->
+    
+    <mat-card-content>
+        
+        <div style=" font-size: 20px;width:100%;padding-bottom: 20px;">
+            <mat-icon class="icon-border">hiking</mat-icon>&nbsp;&nbsp;
+            {{entrenamiento.fecha}}
+        </div>        
+        <div style=" display: flex;">
+        <div style=" font-size: 16px;width:30%;padding-bottom:0px;">{{entrenamiento.tiempo}}</div>        
+        <div style=" font-size: 16px;width:30%;text-align: right;">{{entrenamiento.pasos}} pasos</div>        
+        <div style=" font-size: 16px;width:30%;text-align: right;">{{entrenamiento.distancia}}</div>        
+        <div style=" font-size: 16px;width:30%;text-align: right;">{{entrenamiento.velocidad}}</div>        
+      </div>
+     
+      
+    </mat-card-content>
+    <mat-card-actions style="text-align: right;">
+        <div style="text-align: right;width: 100%;">
+            <button mat-button mat-raised-button (click)="delete(entrenamiento.start)" color="warn" >
+                <mat-icon mat-list-icon>delete</mat-icon>
+            <span>Eliminar</span>            
+        </button>
+        <button mat-button mat-raised-button (click)="view(entrenamiento,i)" *ngIf="!entrenamiento.play"  color="accent">
+            <mat-icon mat-list-icon>visibility</mat-icon>
+            <span>Ver Entrenamiento</span>            
+        </button>
+        <button mat-button mat-raised-button (click)="stopPaintGhost(entrenamiento)" *ngIf="entrenamiento.play"  color="primary">
+            <mat-icon mat-list-icon>visibility_off</mat-icon>
+            <span>Parar</span>            
+        </button>
+    </div>
+        
+
+      
+    </mat-card-actions>
+  </mat-card>
+</div>
