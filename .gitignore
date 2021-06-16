@@ -8,3 +8,4 @@ www/
 /plugins/
 /platforms/
 clave.jks
+myTouchPlugins/cordova-plugin-background-geolocation/android/common
