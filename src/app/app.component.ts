@@ -101,6 +101,7 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     this.appService.Parar();
   } 
   exit(){
+    this.appService.setEntrenamientoStop();
     navigator.app.exitApp();
   }
 

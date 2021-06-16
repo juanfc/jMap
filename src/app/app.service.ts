@@ -1,3 +1,4 @@
+
 import { ElementRef, Injectable, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { LocalStorageService } from 'ngx-webstorage';
@@ -68,6 +69,7 @@ export class AppService implements OnInit {
   }
     private subjectLocation = new Subject<any>();
     private subjectSteps = new Subject<any>();
+    private subjectAuth  = new Subject<any>();
     private subjectEntrenamiento=new Subject<any>();
     private subjetTitle =new Subject<any>();
     public entrenamiento:any;
@@ -95,8 +97,10 @@ export class AppService implements OnInit {
       BackgroundGeolocation.tiles
     }
     setEntrenamientoStop(){
+      if(!this.entrenamiento.started) return;
       this.entrenamiento.started=false;
       this.entrenamiento.stop=new Date().getTime();
+      this.Entrenamientos=this.localSt.retrieve('Entrenamientos');
       this.Entrenamientos.push(this.entrenamiento);
       this.localSt.store('Entrenamientos',this.Entrenamientos);
       this.entrenamiento={start:new Date(),stop:new Date(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
@@ -111,7 +115,7 @@ export class AppService implements OnInit {
       this.entrenamiento.paused=!this.entrenamiento.paused;     
       if(!this.entrenamiento.paused)
       {
-        this.startBackGroundGeoLocation();
+        this.startBackGroundGeoLocation().subscribe(result=>{});
        // this.getPasos();
       }
       else{
@@ -134,10 +138,16 @@ export class AppService implements OnInit {
       this.entrenamiento.paused=false;
       this.entrenamiento.start=new Date().getTime();
       this.entrenamiento.stop=""; */
-      this.entrenamiento={paused_time:0,start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
-      this.sendEntrenamiento('start');
-      this.localSt.store('entrenamiento',this.entrenamiento);
-      this.startBackGroundGeoLocation();
+      this.startBackGroundGeoLocation().subscribe(result=>{
+        console.log("startBackGroundGeoLocation",result);
+        if(result){
+
+          this.entrenamiento={paused_time:0,start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
+          this.sendEntrenamiento('start');
+          this.localSt.store('entrenamiento',this.entrenamiento);
+        }
+      });
+      
     }
     getPasos(){
       //only for IPHONE
@@ -332,7 +342,7 @@ export class AppService implements OnInit {
           notificationsEnabled:true,
           notificationTitle: 'Seguimiento en segundo plano',
           notificationText: '',
-          debug: true,
+          debug: false,
           interval: 2000,
           fastestInterval: 3000,
           activitiesInterval: 5000,
@@ -397,6 +407,8 @@ export class AppService implements OnInit {
              }
 
           });
+
+
           navigator.accelerometer.getCurrentAcceleration((data)=>{
             console.log(data);
           },()=>{
@@ -420,16 +432,25 @@ export class AppService implements OnInit {
 //        navigator.accelerometer.clearWatch(watchID);
 
     }
-    startBackGroundGeoLocation(){
+
+     startBackGroundGeoLocation() : Observable<any>{
+       let subjectAuth  = new Subject<any>();
         BackgroundGeolocation.checkStatus((status)=> {
           console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
           console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
           console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
         if(!status.authorization){
+
+          BackgroundGeolocation.start();
+          BackgroundGeolocation.stop();
+          BackgroundGeolocation.on
           this.checkAuth();
+          return subjectAuth.next(false);
+          
           
         }
-          // you don't need to check status before start (this is just the example)
+        else{
+          // you }don't need to check status before start (this is just the example)
           if (!status.isRunning ) {          
             BackgroundGeolocation.start(); //triggers start on start event
             var successHandler = (pedometerData)=> {
@@ -444,11 +465,13 @@ export class AppService implements OnInit {
             }
           pedometer.startPedometerUpdates(successHandler, onError);
           }
-        });
-    
-        BackgroundGeolocation.startTask(function(taskKey) {
-          console.log(taskKey);
-        });
+          BackgroundGeolocation.startTask(function(taskKey) {
+            console.log(taskKey);
+            return subjectAuth.next(true);
+          });
+        }
+        });      
+        return subjectAuth.asObservable();
       }
 
       stopBackGroundGeoLocation(){
@@ -468,13 +491,14 @@ export class AppService implements OnInit {
           }
         });
       }
-    
+      timeCheck;
       checkAuth(){
         BackgroundGeolocation.on('authorization', function(status) {
           console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
           if (status !== BackgroundGeolocation.AUTHORIZED) {
             // we need to set delay or otherwise alert may not be shown
-            setTimeout(function() {
+            clearTimeout(this.timeCheck);
+            this.timeCheck=setTimeout(function() {
               var showSettings = confirm('Mis Actividades requiere de Ubicación. Ir a configuración?');
               if (showSettings) {                
                 return BackgroundGeolocation.showAppSettings();

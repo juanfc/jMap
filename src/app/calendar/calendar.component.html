@@ -1,3 +1,4 @@
+<div id="calendarContent" style="overflow-y: auto;">
 <div  [hidden]="!verMapa">
     <div   id="map_calendar">
      
@@ -48,12 +49,13 @@
 
   </mat-menu>
 </div>
-<div *ngIf="!Entrenamientos.length">
-  <mat-card>
-  <h2>Aun no hay registros!</h2>
-  </mat-card>
-</div>
+
 <div style="height:200px;overflow-y: scroll;" id="listContainer">
+  <div *ngIf="!Entrenamientos.length">
+    <mat-card>
+    <h2>Aun no hay registros!</h2>
+    </mat-card>
+  </div>
 <div style="margin: 5px;" *ngFor="let entrenamiento of Entrenamientos;let i = index">
 <mat-card class="example-card" >
     <!-- <mat-card-header>
@@ -96,5 +98,6 @@
       
     </mat-card-actions>
   </mat-card>
+</div>
 </div>
 </div>

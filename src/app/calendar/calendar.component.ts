@@ -42,6 +42,10 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
    }
    ngAfterViewInit(){
      this.verMapa=true;
+     this.listContainerHeight=window.innerHeight;
+   document.getElementById("map_calendar").style.height=this.mapHeight+'px';
+   document.getElementById("listContainer").style.height=this.listContainerHeight+'px';
+   document.getElementById("calendarContent").style.height=(window.innerHeight-60)+'px'; 
      setTimeout(() => {
       this.drawMap();
      }, 200);
@@ -137,9 +141,7 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
     this.Entrenamientos=this.appService.getEntrenamientos();
    //this.drawMap();
    //this.mapHeight=window.innerHeight-600;
-   this.listContainerHeight=window.innerHeight;
-   document.getElementById("map_calendar").style.height=this.mapHeight+'px';
-   document.getElementById("listContainer").style.height=this.listContainerHeight+'px';
+   
    this.appService.sendTitle("Histórico");
    this.appService.onEntrenamientoChange().subscribe(data=>{
     console.log(data);
