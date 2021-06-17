@@ -1,7 +1,7 @@
 # JMaps
 
-![Screenshot](./imagenes/image1.png)
-![Screenshot](./imagenes/image2.png)
+![Screenshot](./imagenes/image1.jpg)
+![Screenshot](./imagenes/image2.jpg)
 
 by [Juan F. Calvo](http://www.actualsoft.com.ar)
 
