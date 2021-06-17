@@ -69,9 +69,10 @@
       "cordova-plugin-whitelist": {},
       "cordova-plugin-pedometer": {},
       "cordova-plugin-tts": {},
+      "cordova-plugin-device":{},
       "cordova-plugin-insomnia": {},
       "cordova-plugin-device-motion": {},
-      "cordova-plugin-background-geolocation": {
+      "@mauron85/cordova-plugin-background-geolocation": {
         "GOOGLE_PLAY_SERVICES_VERSION": "11+",
         "ANDROID_SUPPORT_LIBRARY_VERSION": "26+",
         "ICON": "@mipmap/icon",
