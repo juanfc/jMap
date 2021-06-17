@@ -463,7 +463,7 @@ export class AppService implements OnInit {
           if (!status.isRunning ) {          
             BackgroundGeolocation.start(); //triggers start on start event
           }
-          BackgroundGeolocation.startTask(function(taskKey) {
+          BackgroundGeolocation.startTask((taskKey)=> {
             console.log(taskKey);
             pedometer.startPedometerUpdates(this.successHandlerPedometer, this.onErrorPedometer);
             return subjectAuth.next(true);

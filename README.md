@@ -3,7 +3,7 @@
 "Mis Actividades" es una Aplicación para registrar tus actividades físicas tales como caminar, corres, bici, remar, etc. Donde luego podrás visualizar en el mapa y reutilizar la ruta para mejorar tu tiempo.
 
 
-by [Juan F. Calvo](http://www.actualsoft.com.ar)
+by [Juan F. Calvo](calvoj@gmail.com)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.2.8.
 

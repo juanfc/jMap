@@ -69,7 +69,7 @@
       "cordova-plugin-whitelist": {},
       "cordova-plugin-pedometer": {},
       "cordova-plugin-tts": {},
-      "cordova-plugin-device":{},
+      "cordova-plugin-device": {},
       "cordova-plugin-insomnia": {},
       "cordova-plugin-device-motion": {},
       "@mauron85/cordova-plugin-background-geolocation": {
@@ -82,7 +82,17 @@
         "ACCOUNT_TYPE": "$PACKAGE_NAME.account",
         "CONTENT_AUTHORITY": "$PACKAGE_NAME"
       },
-      "cordova-plugin-app-exit": {}
+      "cordova-plugin-app-exit": {},
+      "cordova-plugin-background-geolocation": {
+        "GOOGLE_PLAY_SERVICES_VERSION": "11+",
+        "ANDROID_SUPPORT_LIBRARY_VERSION": "26+",
+        "ICON": "@mipmap/icon",
+        "SMALL_ICON": "@mipmap/icon",
+        "ACCOUNT_NAME": "@string/app_name",
+        "ACCOUNT_LABEL": "@string/app_name",
+        "ACCOUNT_TYPE": "$PACKAGE_NAME.account",
+        "CONTENT_AUTHORITY": "$PACKAGE_NAME"
+      }
     },
     "platforms": [
       "android"
