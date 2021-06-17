@@ -1,7 +1,7 @@
-# JMaps
+# JMaps ("Mis Prácticas")
 
-![Screenshot](./imagenes/pan1.png)
-![Screenshot](./imagenes/pan2.png)
+"Mis Actividades" es una Aplicación para registrar tus actividades físicas tales como caminar, corres, bici, remar, etc. Donde luego podrás visualizar en el mapa y reutilizar la ruta para mejorar tu tiempo.
+
 
 by [Juan F. Calvo](http://www.actualsoft.com.ar)
 
@@ -29,3 +29,6 @@ Run `cordova run android`
 ## Build Release
 
 Run `./release_compile` to build the project.
+
+![Screenshot](./imagenes/pan1.png)
+![Screenshot](./imagenes/pan2.png)

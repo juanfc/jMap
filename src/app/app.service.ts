@@ -432,7 +432,16 @@ export class AppService implements OnInit {
 //        navigator.accelerometer.clearWatch(watchID);
 
     }
-
+    successHandlerPedometer = (pedometerData)=> {
+      // this.sendSteps(pedometerData);
+       console.log(pedometerData);
+       if(this.entrenamiento.started && !this.entrenamiento.paused)
+         this.entrenamiento.pasos=pedometerData.numberOfSteps;              
+      
+   };
+    onErrorPedometer=(e)=>{
+       console.log(e);
+     }
      startBackGroundGeoLocation() : Observable<any>{
        let subjectAuth  = new Subject<any>();
         BackgroundGeolocation.checkStatus((status)=> {
@@ -453,20 +462,10 @@ export class AppService implements OnInit {
           // you }don't need to check status before start (this is just the example)
           if (!status.isRunning ) {          
             BackgroundGeolocation.start(); //triggers start on start event
-            var successHandler = (pedometerData)=> {
-             // this.sendSteps(pedometerData);
-              console.log(pedometerData);
-              if(this.entrenamiento.started && !this.entrenamiento.paused)
-                this.entrenamiento.pasos=pedometerData.numberOfSteps;              
-             
-          };
-          var onError=(e)=>{
-              console.log(e);
-            }
-          pedometer.startPedometerUpdates(successHandler, onError);
           }
           BackgroundGeolocation.startTask(function(taskKey) {
             console.log(taskKey);
+            pedometer.startPedometerUpdates(this.successHandlerPedometer, this.onErrorPedometer);
             return subjectAuth.next(true);
           });
         }
