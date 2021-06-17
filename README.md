@@ -1,4 +1,8 @@
 # JMaps
+
+![Screenshot](./imagenes/image1.png)
+![Screenshot](./imagenes/image2.png)
+
 by [Juan F. Calvo](http://www.actualsoft.com.ar)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 11.2.8.
