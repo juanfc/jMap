@@ -15,10 +15,10 @@ openjdk version "1.8.0_292"
 
 ## Development Build
 
-Run `npm install` 
-Run `ng build`
-Run `./rm_add_android`
-Run `cordova run android`
+Run `npm install`    
+Run `ng build`  
+Run `./rm_add_android`  
+Run `cordova run android`   
 
 
 
