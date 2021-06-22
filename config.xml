@@ -22,7 +22,50 @@
   <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />            
         <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 </config-file> -->
+<config-file target="AndroidManifest.xml" parent="application/activity" xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+      <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="file"   android:pathPattern=".*\\.jmap"  android:mimeType="application/json" />
+        </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:scheme="http" />
+            <data android:host="*" />
+            <data android:pathPattern=".*\\.jmap" />
+        </intent-filter>
+                <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="application/json" />
+        </intent-filter>
+
+                <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:pathPattern=".*\\.jmap" />
+            <data android:mimeType="application/json" />
+        </intent-filter>
+        <!--
+            opening from remote ex. with http (ex. browser)
+        -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:scheme="http" />
+            <data android:host="*" />
+            <data android:pathPattern=".*\\.json" />
+        </intent-filter>
         
+    </config-file>
+    <preference name="AndroidLaunchMode" value="singleInstance"/>
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <icon src="src/assets/icon.png" density="ldpi" />
               <icon src="src/assets/icon.png" density="mdpi" />
         <icon src="src/assets/icon.png" density="hdpi" />

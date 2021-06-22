@@ -1,10 +1,11 @@
 
-import { ElementRef, Injectable, OnInit } from '@angular/core';
+import {  ElementRef, Injectable, NgZone, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { LocalStorageService } from 'ngx-webstorage';
 
 import * as moment from 'moment';
 import { tileLayer, latLng,marker,icon } from 'leaflet';
+import { Router } from '@angular/router';
 
 
 declare var L;
@@ -15,6 +16,8 @@ declare var BackgroundGeolocation;
 declare var TTS;
 declare var window;
 declare var navigator;
+declare var cordova
+
 function reverse(s){
     return s.split("").reverse().join("");
 }
@@ -50,39 +53,26 @@ function editDistance(s1, s2) {
    
 @Injectable({ providedIn: 'root'})
 export class AppService implements OnInit {
-   getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = this.deg2rad(lat2-lat1);  // deg2rad below
-    var dLon = this.deg2rad(lon2-lon1); 
-    var a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-      ; 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    var d = R * c; // Distance in km
-    return d;
-  }
-  
-   deg2rad(deg) {
-    return deg * (Math.PI/180)
-  }
+
     private subjectLocation = new Subject<any>();
     private subjectSteps = new Subject<any>();
     private subjectAuth  = new Subject<any>();
+    private subjetShareEntrenamiento = new Subject<any>();
     private subjectEntrenamiento=new Subject<any>();
     private subjetTitle =new Subject<any>();
     public entrenamiento:any;
     public Entrenamientos=[];
     constructor(
       public localSt:LocalStorageService,
+      private router : Router,
+      private _ngZone: NgZone
     ){
         console.log('Se construye  AppService!');
-      if(this.localSt.retrieve('Entrenamientos')){
-        this.Entrenamientos=this.localSt.retrieve('Entrenamientos');
+      if(this.localSt.retrieve('entrenamientos')){
+        this.Entrenamientos=this.getEntrenamientos();
       }
       else{
-        this.localSt.store('Entrenamientos',[]);
+        this.localSt.store('entrenamientos',[]);
       }
         
       if(this.localSt.retrieve('entrenamiento'))      
@@ -93,20 +83,206 @@ export class AppService implements OnInit {
         this.localSt.store('entrenamiento',this.entrenamiento);
       }
     }
-    setBackgroundGeolocationTitle(title){
-      BackgroundGeolocation.tiles
+    ngOnInit(){
+      console.log('Se Inicia  AppService!');     
     }
-    setEntrenamientoStop(){
-      if(!this.entrenamiento.started) return;
-      this.entrenamiento.started=false;
-      this.entrenamiento.stop=new Date().getTime();
-      this.Entrenamientos=this.localSt.retrieve('Entrenamientos');
-      this.Entrenamientos.push(this.entrenamiento);
-      this.localSt.store('Entrenamientos',this.Entrenamientos);
-      this.entrenamiento={start:new Date(),stop:new Date(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
-      this.localSt.store('entrenamiento',this.entrenamiento);      
-      this.stopBackGroundGeoLocation();
-      this.sendEntrenamiento('stop');
+    OpenFile(){
+      function success() {
+        console.log('Success');
+      }
+      
+      function error(code) {
+        if (code === 1) {
+          console.log('No file handler found');
+        } else {
+          console.log('Undefined error');
+        }
+      }
+      
+      function progress(progressEvent) {
+        if (progressEvent.lengthComputable) {
+          var perc = Math.floor(progressEvent.loaded / progressEvent.total * 100);
+          // update UI with status, for example:
+          // statusDom.innerHTML = perc + "% loaded...";
+        } else {
+          // download does not offer a length... just show dots
+          /*
+             if(statusDom.innerHTML == "") {
+             statusDom.innerHTML = "Loading";
+             } else {
+             statusDom.innerHTML += ".";
+             }
+           */
+        }
+      };
+      cordova.plugins.disusered.open(cordova.file.externalRootDirectory+'DCIM/Camera/IMG_20201103_122844233.jpg', success, error, progress);
+    }
+
+    getCurrent(){
+      window.plugins.fileAssociation.addGetExternal(null,(data)=>{
+        this._ngZone.run(()=>{
+          this.router.navigate(['/calendar']);
+          });
+        var info=JSON.parse(JSON.parse(data));
+        info.externo=true;
+        info.saved=false;
+        this.sendShareEntrenamiento(info);
+        this.getCurrent();
+      },(error)=>{
+        console.log(error);
+      });
+    }
+    GetExternalFile(){
+     
+      
+      
+      window.plugins.fileAssociation.getAssociatedData(null,
+         (success)=> {
+            try {
+                if (success != null) {
+                    //handle your data here maybe ex. by promise 
+                    console.log(success);
+                    var info=JSON.parse(JSON.parse(success));
+                    info.externo=true;
+                    info.saved=false;
+                    this.sendShareEntrenamiento(info);
+                    //alert(success);
+                    //this.GetExternalFile();
+                    this._ngZone.run(()=>{
+                      this.router.navigate(['/calendar']);
+                      });
+
+                    //navigator.app.exitApp();
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }, function (error) {
+            console.log(error);
+        });
+    }
+
+    StartServiceMobile(){
+
+      this.GetExternalFile();
+            
+      this.getCurrent();
+      BackgroundGeolocation.configure({
+        startOnBoot:false,
+        locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+        desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+        stationaryRadius: 2,
+        distanceFilter: 2,
+        notificationsEnabled:true,
+        notificationTitle: 'Seguimiento en segundo plano',
+        notificationText: '',
+        debug: false,
+        interval: 2000,
+        fastestInterval: 3000,
+        activitiesInterval: 5000,
+        stopOnTerminate: false // enable this to clear background location settings when the app terminates
+      });
+      BackgroundGeolocation.on('location', (location)=> {
+          console.log(location);
+         
+          //('Vel: '+(data.speed).toFixed(2)+'M/s Prom:'+(this.velocidad_promedio/index).toFixed(2)+'M/s Dist:'+(this.velocidad_promedio*3.6/1000).toFixed(2)+'Km')
+          this.sendLocation(location);
+          if(!this.entrenamiento.started){
+            //Auto Stop 
+            this.stopBackGroundGeoLocation();
+            return;
+          } 
+
+          this.entrenamiento.Locations.push(location);
+          let index=0;
+          this.entrenamiento.velocidad_promedio=0;
+          
+
+          let kmTotales=0;
+          let _velocidad_promedio=0;
+          for(let x=0;x<this.entrenamiento.Locations.length;x++){
+            let pos1=this.entrenamiento.Locations[x];
+            if(pos1.speed)
+              _velocidad_promedio+=pos1.speed;
+
+            let pos2=this.entrenamiento.Locations[x+1];
+            if((x+1)<this.entrenamiento.Locations.length){         
+               kmTotales+=this.getDistanceFromLatLonInKm(pos1.latitude,pos1.longitude,pos2.latitude,pos2.longitude);
+             }
+           }
+
+          
+          
+        //this.entrenamiento.distancia=(this.entrenamiento.velocidad_promedio*3.6/1000).toFixed(2)+'Km';
+        this.entrenamiento.velocidad_promedio=_velocidad_promedio;
+          this.entrenamiento.distancia=kmTotales.toFixed(2)+'Km';
+          
+          this.localSt.store('entrenamiento',this.entrenamiento);
+          this.sendEntrenamiento('newPosition');
+          // handle your locations here
+          // to perform long running operation on iOS
+          // you need to create background task
+         
+        });
+        BackgroundGeolocation.on('stationary', (stationaryLocation)=> {
+          console.log("Stationary");
+          console.log(stationaryLocation);
+          // handle stationary locations here
+        });
+        BackgroundGeolocation.checkStatus((status)=> {
+          console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+          console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+          console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+       
+          // you don't need to check status before start (this is just the example)
+          if (!status.isRunning) { 
+            this.entrenamiento.paused=true;
+            this.sendEntrenamiento('checkStatus');
+           }
+
+        });
+
+
+        navigator.accelerometer.getCurrentAcceleration((data)=>{
+          console.log(data);
+        },()=>{
+          console.log('errrorrr acee');
+        });
+
+        function onSuccess(acceleration) {
+          return;
+          console.log('Acceleration X: ' + acceleration.x + '\n' +
+                'Acceleration Y: ' + acceleration.y + '\n' +
+                'Acceleration Z: ' + acceleration.z + '\n' +
+                'Timestamp: '      + acceleration.timestamp + '\n');
+      }
+      
+      function onError() {
+          alert('onError!');
+      }
+      
+      var options = { frequency: 3000 };  // Update every 3 seconds
+      
+      var watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+//        navigator.accelerometer.clearWatch(watchID);
+
+  }
+   
+    setEntrenamientoStart(){
+      /* this.entrenamiento.started=true;
+      this.entrenamiento.paused_time=0;
+      this.entrenamiento.paused=false;
+      this.entrenamiento.start=new Date().getTime();
+      this.entrenamiento.stop=""; */
+      this.startBackGroundGeoLocation().subscribe(result=>{
+        console.log("startBackGroundGeoLocation",result);
+        if(result){
+
+          this.entrenamiento={paused_time:0,start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
+          this.sendEntrenamiento('start');
+          this.localSt.store('entrenamiento',this.entrenamiento);
+        }
+      });
       
     }
 
@@ -127,28 +303,77 @@ export class AppService implements OnInit {
       this.localSt.store('entrenamiento',this.entrenamiento);
     }
 
-    getEntrenamiento(propiedad?){
-        if(propiedad)
-          return this.entrenamiento[propiedad];   
-       return this.entrenamiento;
-    }
-    setEntrenamientoStart(){
-      /* this.entrenamiento.started=true;
-      this.entrenamiento.paused_time=0;
-      this.entrenamiento.paused=false;
-      this.entrenamiento.start=new Date().getTime();
-      this.entrenamiento.stop=""; */
-      this.startBackGroundGeoLocation().subscribe(result=>{
-        console.log("startBackGroundGeoLocation",result);
-        if(result){
-
-          this.entrenamiento={paused_time:0,start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
-          this.sendEntrenamiento('start');
-          this.localSt.store('entrenamiento',this.entrenamiento);
-        }
-      });
+    setEntrenamientoStop(){
+      if(!this.entrenamiento.started) return;
+      this.entrenamiento.started=false;
+      this.entrenamiento.stop=new Date().getTime();
+      this.Entrenamientos=this.localSt.retrieve('entrenamientos');
+      this.Entrenamientos.push(this.entrenamiento);
+      this.localSt.store('entrenamientos',this.Entrenamientos);
+      this.entrenamiento={start:new Date(),stop:new Date(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
+      this.localSt.store('entrenamiento',this.entrenamiento);      
+      this.stopBackGroundGeoLocation();
+      this.sendEntrenamiento('stop');
       
     }
+
+
+
+   
+    
+    startBackGroundGeoLocation() : Observable<any>{
+      let subjectAuth  = new Subject<any>();
+       BackgroundGeolocation.checkStatus((status)=> {
+         console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+         console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+         console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+       if(!status.authorization){
+
+         BackgroundGeolocation.start();
+         BackgroundGeolocation.stop();
+         BackgroundGeolocation.on
+         this.checkAuth();
+         return subjectAuth.next(false);
+         
+         
+       }
+       else{
+         // you }don't need to check status before start (this is just the example)
+         if (!status.isRunning ) {          
+           BackgroundGeolocation.start(); //triggers start on start event
+         }
+         BackgroundGeolocation.startTask((taskKey)=> {
+           console.log(taskKey);
+           pedometer.startPedometerUpdates(this.successHandlerPedometer, this.onErrorPedometer);
+           return subjectAuth.next(true);
+         });
+       }
+       });      
+       return subjectAuth.asObservable();
+     }
+
+     stopBackGroundGeoLocation(){
+       BackgroundGeolocation.checkStatus((status)=> {
+         console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
+         console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
+         console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
+         
+         // you don't need to check status before start (this is just the example)
+         if (status.isRunning) {
+           BackgroundGeolocation.stop(); //triggers start on start event
+           pedometer.stopPedometerUpdates((success)=>{
+             console.log("stop",success);
+           }, (error)=>{
+             console.log("stop",error);
+           });
+         }
+       });
+     }
+     getEntrenamiento(propiedad?){
+      if(propiedad)
+        return this.entrenamiento[propiedad];   
+     return this.entrenamiento;
+  }
     getPasos(){
       //only for IPHONE
       var successHandler = function (pedometerData) {
@@ -162,9 +387,7 @@ export class AppService implements OnInit {
     pedometer.queryData(successHandler, (onError)=>{console.log(onError)}, options);
     }
 
-    ngOnInit(){
-      console.log('Se Inicia  AppService!');     
-    }
+
     isRecog(){
 
         let successCallback=(d)=>{
@@ -291,6 +514,11 @@ export class AppService implements OnInit {
     sendEntrenamiento(action) {
       this.subjectEntrenamiento.next({ info:this.entrenamiento, action:action });
   }
+  sendShareEntrenamiento(entrenamiento) {
+    setTimeout(() => {      
+      this.subjetShareEntrenamiento.next({ info:entrenamiento});
+    }, 100);
+  }
   sendTitle(action) {
     setTimeout(() => {
       
@@ -304,6 +532,11 @@ export class AppService implements OnInit {
     onStepsChange(): Observable<any> {
         return this.subjectSteps.asObservable();
     }
+  
+    onShareEntrenamientoChange(): Observable<any> {
+      return this.subjetShareEntrenamiento.asObservable();
+    }
+
     onTitleChange(): Observable<any> {
       return this.subjetTitle.asObservable();
   }
@@ -330,108 +563,7 @@ export class AppService implements OnInit {
       }));
       
     }
-    StartServiceMobile(){
 
-        
-        BackgroundGeolocation.configure({
-          startOnBoot:false,
-          locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-          desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-          stationaryRadius: 2,
-          distanceFilter: 2,
-          notificationsEnabled:true,
-          notificationTitle: 'Seguimiento en segundo plano',
-          notificationText: '',
-          debug: false,
-          interval: 2000,
-          fastestInterval: 3000,
-          activitiesInterval: 5000,
-          stopOnTerminate: false // enable this to clear background location settings when the app terminates
-        });
-        BackgroundGeolocation.on('location', (location)=> {
-            console.log(location);
-           
-            //('Vel: '+(data.speed).toFixed(2)+'M/s Prom:'+(this.velocidad_promedio/index).toFixed(2)+'M/s Dist:'+(this.velocidad_promedio*3.6/1000).toFixed(2)+'Km')
-            this.sendLocation(location);
-            if(!this.entrenamiento.started){
-              //Auto Stop 
-              this.stopBackGroundGeoLocation();
-              return;
-            } 
-
-            this.entrenamiento.Locations.push(location);
-            let index=0;
-            this.entrenamiento.velocidad_promedio=0;
-            
- 
-            let kmTotales=0;
-            let _velocidad_promedio=0;
-            for(let x=0;x<this.entrenamiento.Locations.length;x++){
-              let pos1=this.entrenamiento.Locations[x];
-              if(pos1.speed)
-                _velocidad_promedio+=pos1.speed;
-
-              let pos2=this.entrenamiento.Locations[x+1];
-              if((x+1)<this.entrenamiento.Locations.length){         
-                 kmTotales+=this.getDistanceFromLatLonInKm(pos1.latitude,pos1.longitude,pos2.latitude,pos2.longitude);
-               }
-             }
-
-            
-            
-          //this.entrenamiento.distancia=(this.entrenamiento.velocidad_promedio*3.6/1000).toFixed(2)+'Km';
-          this.entrenamiento.velocidad_promedio=_velocidad_promedio;
-            this.entrenamiento.distancia=kmTotales.toFixed(2)+'Km';
-            
-            this.localSt.store('entrenamiento',this.entrenamiento);
-            this.sendEntrenamiento('newPosition');
-            // handle your locations here
-            // to perform long running operation on iOS
-            // you need to create background task
-           
-          });
-          BackgroundGeolocation.on('stationary', (stationaryLocation)=> {
-            console.log("Stationary");
-            console.log(stationaryLocation);
-            // handle stationary locations here
-          });
-          BackgroundGeolocation.checkStatus((status)=> {
-            console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-            console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-            console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-         
-            // you don't need to check status before start (this is just the example)
-            if (!status.isRunning) { 
-              this.entrenamiento.paused=true;
-              this.sendEntrenamiento('checkStatus');
-             }
-
-          });
-
-
-          navigator.accelerometer.getCurrentAcceleration((data)=>{
-            console.log(data);
-          },()=>{
-            console.log('errrorrr acee');
-          });
-
-          function onSuccess(acceleration) {
-            console.log('Acceleration X: ' + acceleration.x + '\n' +
-                  'Acceleration Y: ' + acceleration.y + '\n' +
-                  'Acceleration Z: ' + acceleration.z + '\n' +
-                  'Timestamp: '      + acceleration.timestamp + '\n');
-        }
-        
-        function onError() {
-            alert('onError!');
-        }
-        
-        var options = { frequency: 3000 };  // Update every 3 seconds
-        
-        var watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
-//        navigator.accelerometer.clearWatch(watchID);
-
-    }
     successHandlerPedometer = (pedometerData)=> {
       // this.sendSteps(pedometerData);
        console.log(pedometerData);
@@ -442,54 +574,7 @@ export class AppService implements OnInit {
     onErrorPedometer=(e)=>{
        console.log(e);
      }
-     startBackGroundGeoLocation() : Observable<any>{
-       let subjectAuth  = new Subject<any>();
-        BackgroundGeolocation.checkStatus((status)=> {
-          console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-          console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-          console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-        if(!status.authorization){
-
-          BackgroundGeolocation.start();
-          BackgroundGeolocation.stop();
-          BackgroundGeolocation.on
-          this.checkAuth();
-          return subjectAuth.next(false);
-          
-          
-        }
-        else{
-          // you }don't need to check status before start (this is just the example)
-          if (!status.isRunning ) {          
-            BackgroundGeolocation.start(); //triggers start on start event
-          }
-          BackgroundGeolocation.startTask((taskKey)=> {
-            console.log(taskKey);
-            pedometer.startPedometerUpdates(this.successHandlerPedometer, this.onErrorPedometer);
-            return subjectAuth.next(true);
-          });
-        }
-        });      
-        return subjectAuth.asObservable();
-      }
-
-      stopBackGroundGeoLocation(){
-        BackgroundGeolocation.checkStatus((status)=> {
-          console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
-          console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
-          console.log('[INFO] BackgroundGeolocation auth status: ' + status.authorization);
-          
-          // you don't need to check status before start (this is just the example)
-          if (status.isRunning) {
-            BackgroundGeolocation.stop(); //triggers start on start event
-            pedometer.stopPedometerUpdates((success)=>{
-              console.log("stop",success);
-            }, (error)=>{
-              console.log("stop",error);
-            });
-          }
-        });
-      }
+    
       timeCheck;
       checkAuth(){
         BackgroundGeolocation.on('authorization', function(status) {
@@ -535,6 +620,7 @@ export class AppService implements OnInit {
          entrenamiento.fecha_corta=moment(fecha).format('MMM D');
          entrenamiento.pasos=entrenamiento.pasos+entrenamiento.pasos_acumulados;
          entrenamiento.inArea=false;
+         entrenamiento.saved=true;
          let miliseg=entrenamiento.stop-entrenamiento.start-(entrenamiento.paused_time*1000);
          entrenamiento.tiempo= new Date(miliseg).toISOString().substr(11, 8);
          if(entrenamiento.Locations.length && location){
@@ -579,5 +665,27 @@ export class AppService implements OnInit {
        });
        console.log(Entrenamientos);
        return Entrenamientos;
+      }
+      
+      setBackgroundGeolocationTitle(title){
+        BackgroundGeolocation.tiles
+      }
+
+      getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+        var R = 6371; // Radius of the earth in km
+        var dLat = this.deg2rad(lat2-lat1);  // deg2rad below
+        var dLon = this.deg2rad(lon2-lon1); 
+        var a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2)
+          ; 
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        var d = R * c; // Distance in km
+        return d;
+      }
+      
+       deg2rad(deg) {
+        return deg * (Math.PI/180)
       }
 }

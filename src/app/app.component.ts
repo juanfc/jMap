@@ -55,9 +55,10 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
       }, false);
        
       
-
+      
       window.plugins.insomnia.keepAwake();
       window.addEventListener("deviceorientationabsolute", (event)=> {
+
         //console.log(event);
         let obj=  document.getElementById("agujas")
         if(obj){
@@ -66,14 +67,17 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
         // process event.alpha, event.beta and event.gamma
     }, true);
 
+
       console.log(device);
       console.log(navigator.compass);
       this.appService.StartServiceMobile();
+      
       this.appService.checkAuth();
       this.router.navigate(['/inicio']);
        //if(this.localSt.retrieve('started'))
   }, false);
   }
+
   checkAuth(){
     this.appService.verConfig()
     this.appService.checkAuth();
@@ -100,6 +104,9 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
   parar(){
     this.appService.Parar();
   } 
+  open(){
+    this.appService.OpenFile();
+  }
   exit(){
     this.appService.setEntrenamientoStop();
     navigator.app.exitApp();

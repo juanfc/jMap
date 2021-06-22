@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { AppService } from '../app.service';
 import * as moment from 'moment';
 import { tileLayer, latLng,marker,icon } from 'leaflet';
@@ -22,8 +22,10 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
   private appService:AppService;
   constructor(
     @Inject(AppService) appService: AppService,
+    private _changeDetectorRef: ChangeDetectorRef
   ) {
     this.appService=appService;
+
     
    }
    SliderChanging=false;
@@ -143,6 +145,13 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
    //this.mapHeight=window.innerHeight-600;
    
    this.appService.sendTitle("Histórico");
+  this.appService.onShareEntrenamientoChange().subscribe(data=>{
+    console.log(data);
+    data.info.play=false;
+    this.Entrenamientos.unshift(data.info);
+    this._changeDetectorRef.detectChanges();
+  });
+
    this.appService.onEntrenamientoChange().subscribe(data=>{
     console.log(data);
     switch(data.action){
@@ -151,6 +160,19 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
       break;
     }
   });
+  }
+  guardar(entrenamiento){
+    entrenamiento.saved=true;
+    this._changeDetectorRef.detectChanges();
+    let arr=[];
+    this.IndexClick=0;
+    for(let x=0;x<this.Entrenamientos.length;x++)
+      if(this.Entrenamientos[x].saved){
+        arr.push(this.Entrenamientos[x]);    
+      }
+    this.Entrenamientos=arr;    
+    this.appService.localSt.store('entrenamientos',this.Entrenamientos);
+    this._changeDetectorRef.detectChanges();
   }
   delete(start){
     let arr=[];
@@ -161,8 +183,10 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
       }
     this.Entrenamientos=arr;    
     this.appService.localSt.store('entrenamientos',this.Entrenamientos);
+    this._changeDetectorRef.detectChanges();
   }
   IndexClick=0;
+
   view(entrenamiento,index){
     if(this.IndexClick!=index){
       this.Entrenamientos[this.IndexClick].play=false;
@@ -187,11 +211,13 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
         document.getElementsByTagName('mat-drawer-content')[0].scrollTo(0, 0)
       }, 100);
     }, 100);
+    this._changeDetectorRef.detectChanges();
   }
   stopPaintGhost(entrenamiento){
     entrenamiento.play=false;    
     clearInterval(this.MapInterval);
-    this.MapInterval=""
+    this.MapInterval="";
+    this._changeDetectorRef.detectChanges();
   }
   
   mark
