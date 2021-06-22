@@ -1,6 +1,6 @@
 # JMaps ("Mis Prácticas")
 
-"Mis Actividades" es una Aplicación para registrar tus actividades físicas tales como caminar, corres, bici, remar, etc. Donde luego podrás visualizar en el mapa y reutilizar la ruta para mejorar tu tiempo.
+"Mis Actividades" es una Aplicación para registrar tus actividades físicas tales como caminar, correr, bici, remar, etc. Donde luego podrás visualizar en el mapa y reutilizar la ruta para mejorar tu tiempo.
 
 
 by [Juan F. Calvo](<mailto:calvoj@gmail.com>)
