@@ -8,11 +8,15 @@
     
     <mat-card-content>
       <p>
-        
+        <mat-form-field class="example-full-width">
+          <mat-label>Tu Nombre</mat-label>
+          <input matInput [(ngModel)]="nombre">
+        </mat-form-field>
       </p>
+      <button mat-button mat-raised-button (click)="save()" color="accent"><mat-icon>save</mat-icon>Guardar cambios</button>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-button (click)="checkAuth()"><mat-icon>app_settings_alt</mat-icon>Abrir Configuración </button>
+      <button mat-button mat-raised-button (click)="checkAuth()"><mat-icon>app_settings_alt</mat-icon>Configuración App </button>
       
     </mat-card-actions>
   </mat-card>

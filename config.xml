@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.actualsoft.jmap" version="1.0.3" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.actualsoft.jmap" version="1.0.6" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Mis Prácticas</name>
     <description>
         Una aplicación libre para que puedas mejorar tus entrenamientos!
@@ -64,13 +64,17 @@
         </intent-filter>
         
     </config-file>
+    <preference name="AndroidXEnabled" value="false" />
+    <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+
+
     <preference name="AndroidLaunchMode" value="singleInstance"/>
     <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <icon src="src/assets/icon.png" density="ldpi" />
               <icon src="src/assets/icon.png" density="mdpi" />
         <icon src="src/assets/icon.png" density="hdpi" />
         <icon src="src/assets/icon.png" density="xhdpi" />
-        <preference name="android-minSdkVersion" value="24"/>
+        <preference name="android-minSdkVersion" value="22"/>
         <preference name="android-targetSdkVersion" value="30"/>
         <allow-intent href="market:*" />
           

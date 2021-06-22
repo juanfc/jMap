@@ -209,9 +209,21 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
       this.startPaintGhost();
       setTimeout(() => {
         document.getElementsByTagName('mat-drawer-content')[0].scrollTo(0, 0)
+        document.getElementById('calendarContent').scrollTo(0, 0)
+        
       }, 100);
     }, 100);
     this._changeDetectorRef.detectChanges();
+  }
+  shareEntrenamiento(entrenamiento){
+    let user=this.appService.localSt.retrieve('usuario');
+    let nombre ="Usuario"
+    if(user){
+      nombre=user.nombre;
+    }
+    let str="";
+    this.appService.setTempFile(nombre+"-"+entrenamiento.fecha+".json", JSON.stringify(entrenamiento));
+    //this.appService.writeFile('JuanEntrenamiento.json', JSON.stringify(entrenamiento))
   }
   stopPaintGhost(entrenamiento){
     entrenamiento.play=false;    

@@ -8,6 +8,8 @@ import { tileLayer, latLng,marker,icon } from 'leaflet';
 import { Router } from '@angular/router';
 
 
+
+
 declare var L;
 moment.locale('es-us');    
 declare var device;
@@ -86,7 +88,7 @@ export class AppService implements OnInit {
     ngOnInit(){
       console.log('Se Inicia  AppService!');     
     }
-    OpenFile(){
+    OpenFile(fileName){
       function success() {
         console.log('Success');
       }
@@ -115,7 +117,7 @@ export class AppService implements OnInit {
            */
         }
       };
-      cordova.plugins.disusered.open(cordova.file.externalRootDirectory+'DCIM/Camera/IMG_20201103_122844233.jpg', success, error, progress);
+      cordova.plugins.disusered.shareFile(cordova.file.externalCacheDirectory +fileName, success, error, progress);
     }
 
     getCurrent(){
@@ -123,7 +125,7 @@ export class AppService implements OnInit {
         this._ngZone.run(()=>{
           this.router.navigate(['/calendar']);
           });
-        var info=JSON.parse(JSON.parse(data));
+        var info=JSON.parse(data);
         info.externo=true;
         info.saved=false;
         this.sendShareEntrenamiento(info);
@@ -142,7 +144,7 @@ export class AppService implements OnInit {
                 if (success != null) {
                     //handle your data here maybe ex. by promise 
                     console.log(success);
-                    var info=JSON.parse(JSON.parse(success));
+                    var info=JSON.parse(success);
                     info.externo=true;
                     info.saved=false;
                     this.sendShareEntrenamiento(info);
@@ -331,7 +333,6 @@ export class AppService implements OnInit {
 
          BackgroundGeolocation.start();
          BackgroundGeolocation.stop();
-         BackgroundGeolocation.on
          this.checkAuth();
          return subjectAuth.next(false);
          
@@ -688,4 +689,59 @@ export class AppService implements OnInit {
        deg2rad(deg) {
         return deg * (Math.PI/180)
       }
+      writeFile(fileEntry, dataObj) {
+        // Create a FileWriter object for our FileEntry (log.txt).
+        fileEntry.createWriter( (fileWriter)=> {
+    
+            fileWriter.onwriteend = ()=> {
+                console.log("Successful file write...");
+                this.OpenFile(fileEntry.name);
+                //this.readFile(fileEntry);
+            };
+    
+            fileWriter.onerror = function (e) {
+                console.log("Failed file write: " + e.toString());
+            };
+    
+            // If data object is not passed in,
+            // create a new Blob instead.
+            if (!dataObj) {
+                dataObj = new Blob(['some file data'], { type: 'text/plain' });
+            }
+    
+            fileWriter.write(dataObj);
+        });
+    }
+     createFile(dirEntry, fileName, isAppend,data) {
+      // Creates a new file or returns the file if it already exists.
+      dirEntry.getFile(fileName, {create: true, exclusive: false}, (fileEntry)=> {
+  
+          this.writeFile(fileEntry, data);
+  
+      }, (onErrorCreateFile)=>{});
+  
+  }
+  setTempFile(file,data){
+    window.requestFileSystem(window.TEMPORARY, 5 * 1024 * 1024,  (fs)=> {
+
+      console.log('file system open: ' + fs.name);
+      this.createFile(fs.root, file, false,data);
+  
+    }, (onErrorLoadFs)=>{});
+  }
+  readFile(fileEntry) {
+
+      fileEntry.file( (file)=> {
+          var reader = new FileReader();
+  
+          reader.onloadend = function() {
+              console.log("Successful file read: " + this.result);
+              
+          };
+  
+          reader.readAsText(file);
+  
+      }, (onErrorReadFile)=>{});
+  }
+
 }

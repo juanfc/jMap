@@ -80,13 +80,18 @@
     </mat-card-content>
     <mat-card-actions style="text-align: right;">
         <div style="text-align: right;width: 100%;">
+          
+          <button mat-button mat-raised-button *ngIf="entrenamiento.saved"  (click)="shareEntrenamiento(entrenamiento)" color="primary" >
+            <mat-icon mat-list-icon>share</mat-icon>
+            <span></span>            
+        </button>  
         <button mat-button mat-raised-button *ngIf="!entrenamiento.saved" (click)="guardar(entrenamiento)" color="primary" >
           <mat-icon mat-list-icon>save</mat-icon>
           <span>Guardar</span>            
       </button>  
-        <button mat-button mat-raised-button (click)="delete(entrenamiento.start)" color="warn" >
+        <button mat-button mat-raised-button (click)="delete(entrenamiento.start)" *ngIf="!entrenamiento.play" color="warn" >
                 <mat-icon mat-list-icon>delete</mat-icon>
-            <span>Eliminar</span>            
+            
         </button>
         <button mat-button mat-raised-button (click)="view(entrenamiento,i)" *ngIf="!entrenamiento.play"  color="accent">
             <mat-icon mat-list-icon>visibility</mat-icon>

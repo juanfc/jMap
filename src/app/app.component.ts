@@ -31,6 +31,7 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     console.log('Destroy app component');
   }
   List=[];
+  timeExit;
   ngOnInit(){
     //for Test
   
@@ -51,6 +52,7 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
         switch(parent.router['location'].path()){
           case '/calendar':
           break;
+
         }
       }, false);
        
@@ -105,7 +107,7 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     this.appService.Parar();
   } 
   open(){
-    this.appService.OpenFile();
+    window.open("https://play.google.com/store/apps/details?id=com.actualsoft.jmap",'_new');  
   }
   exit(){
     this.appService.setEntrenamientoStop();

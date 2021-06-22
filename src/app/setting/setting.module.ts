@@ -10,6 +10,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import {MatSliderModule} from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
 
 const thisRoute: Route[] = [
   {
@@ -29,6 +30,7 @@ const thisRoute: Route[] = [
   imports: [
     CommonModule,
     FormsModule,
+    MatInputModule,
     MatMenuModule,        
     MatIconModule,
     MatSliderModule,

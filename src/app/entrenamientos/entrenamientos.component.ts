@@ -218,11 +218,7 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
 
     
 
-    if(!this.entrenamiento.started){
-
-      this.appService.startBackGroundGeoLocation();
-      
-    }
+  
     this.appService.onLocationChange().subscribe(data=>{
       this.backGroundLocation=data.info;
       if(!this.entrenamiento.started)
@@ -240,14 +236,27 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
       console.log("Steps:",data);
     });
     
-setTimeout(() => {  
-  this.getCurrentLocation(); //llama a Service GetEntrenamientos Si la posición cambia
-}, 1000);
+    setTimeout(() => {  
+      this.updateForcePosition();
+      this.getCurrentLocation(); //llama a Service GetEntrenamientos Si la posición cambia
+    }, 1000);
     
     this.TimeCurrentLocation=setInterval(() => {
+
       this.getCurrentLocation();
+
     }, 1000*60);
 
+  }
+  updateForcePosition(){
+    if(!this.entrenamiento.started){
+      this.appService.startBackGroundGeoLocation();      
+      setTimeout(() => {
+        if(!this.entrenamiento.started){
+          this.appService.stopBackGroundGeoLocation();
+        }
+      }, 1000*10);
+    }
   }
   getEntrenamientosHistory(event){
     this.EntrenamientosHistory= this.appService.getEntrenamientos();
