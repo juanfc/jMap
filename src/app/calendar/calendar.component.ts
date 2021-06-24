@@ -2,7 +2,8 @@ import { AfterViewInit, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit 
 import { AppService } from '../app.service';
 import * as moment from 'moment';
 import { tileLayer, latLng,marker,icon } from 'leaflet';
-
+import { MatDialog } from '@angular/material/dialog';
+import {DialogConfirmComponent} from '../dialog-confirm/dialog-confirm.component'
 
 declare var L;
 moment.locale('es-us');    
@@ -22,12 +23,16 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
   private appService:AppService;
   constructor(
     @Inject(AppService) appService: AppService,
+    public dialogo: MatDialog,
     private _changeDetectorRef: ChangeDetectorRef
   ) {
     this.appService=appService;
 
     
    }
+   mostrarDialogo(): void {
+   
+  }
    SliderChanging=false;
    timeSlider;
    onTouched(e){
@@ -175,15 +180,28 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
     this._changeDetectorRef.detectChanges();
   }
   delete(start){
-    let arr=[];
-    this.IndexClick=0;
-    for(let x=0;x<this.Entrenamientos.length;x++)
-      if(this.Entrenamientos[x].start!=start){
-        arr.push(this.Entrenamientos[x]);    
+    this.dialogo
+    .open(DialogConfirmComponent, {
+      data: '¿Quieres eliminar el entrenamiento?'
+    })
+    .afterClosed()
+    .subscribe((confirmado: Boolean) => {
+      if (confirmado) {
+        let arr=[];
+        this.IndexClick=0;
+        for(let x=0;x<this.Entrenamientos.length;x++)
+          if(this.Entrenamientos[x].start!=start){
+            arr.push(this.Entrenamientos[x]);    
+          }
+        this.Entrenamientos=arr;    
+        this.appService.localSt.store('entrenamientos',this.Entrenamientos);
+        this._changeDetectorRef.detectChanges();
+      } else {
+        
       }
-    this.Entrenamientos=arr;    
-    this.appService.localSt.store('entrenamientos',this.Entrenamientos);
-    this._changeDetectorRef.detectChanges();
+    });
+    
+
   }
   IndexClick=0;
 
@@ -220,6 +238,7 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
     let nombre ="Usuario"
     if(user){
       nombre=user.nombre;
+      entrenamiento.user=user.nombre;
     }
     let str="";
     this.appService.setTempFile(nombre+"-"+entrenamiento.fecha+".json", JSON.stringify(entrenamiento));
@@ -325,6 +344,13 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
     // create the tile layer with correct attribution
    var osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
    var osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+   let config=this.appService.localSt.retrieve('config');
+   if(config.darkMap){
+      document.getElementById('map_calendar').style.filter="invert(1) sepia(13%) saturate(37%) hue-rotate(130deg) brightness(95%) contrast(80%)"
+   }
+   else{
+    document.getElementById('map_calendar').style.filter="invert(0)"
+   }
    var osm = new L.TileLayer(this.url, {minZoom: 0, maxZoom: 20, attribution: osmAttrib}); 
   
    this.map.setView( new L.LatLng(-31.388246158367238, -64.48196783165659),15);

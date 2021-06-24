@@ -58,12 +58,14 @@ export class AppService implements OnInit {
 
     private subjectLocation = new Subject<any>();
     private subjectSteps = new Subject<any>();
+    private subjectAccel = new Subject<any>();
     private subjectAuth  = new Subject<any>();
     private subjetShareEntrenamiento = new Subject<any>();
     private subjectEntrenamiento=new Subject<any>();
     private subjetTitle =new Subject<any>();
     public entrenamiento:any;
     public Entrenamientos=[];
+    public getAcceration:boolean=false;
     constructor(
       public localSt:LocalStorageService,
       private router : Router,
@@ -119,8 +121,11 @@ export class AppService implements OnInit {
       };
       cordova.plugins.disusered.shareFile(cordova.file.externalCacheDirectory +fileName, success, error, progress);
     }
+    shareText(text){
+      cordova.plugins.disusered.shareText(text, ()=>{},()=>{},()=>{});
+    }
 
-    getCurrent(){
+    getFileFromShare(){
       window.plugins.fileAssociation.addGetExternal(null,(data)=>{
         this._ngZone.run(()=>{
           this.router.navigate(['/calendar']);
@@ -129,7 +134,8 @@ export class AppService implements OnInit {
         info.externo=true;
         info.saved=false;
         this.sendShareEntrenamiento(info);
-        this.getCurrent();
+        //need call every time
+        this.getFileFromShare();
       },(error)=>{
         console.log(error);
       });
@@ -164,26 +170,50 @@ export class AppService implements OnInit {
         });
     }
 
+    keepAwake(si){
+      if(si)
+        window.plugins.insomnia.keepAwake();
+      else
+      window.plugins.insomnia.allowSleepAgain()
+    }
+    watchAccelID;
     StartServiceMobile(){
+
+      let config=this.localSt.retrieve('config');
+      if(!config){
+        config={'keepAwake':false,'darkMap':false,'textSpeech':false};
+        this.localSt.store('config',config);
+      }
+      this.keepAwake(config.keepAwake);
+        
 
       this.GetExternalFile();
             
-      this.getCurrent();
+      this.getFileFromShare();
       BackgroundGeolocation.configure({
         startOnBoot:false,
         locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
         desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-        stationaryRadius: 2,
-        distanceFilter: 2,
+        stationaryRadius: 1,
+        distanceFilter: 1,
+        startForeground:false,
         notificationsEnabled:true,
         notificationTitle: 'Seguimiento en segundo plano',
         notificationText: '',
-        debug: false,
+        debug: true,
         interval: 2000,
         fastestInterval: 3000,
         activitiesInterval: 5000,
         stopOnTerminate: false // enable this to clear background location settings when the app terminates
       });
+      BackgroundGeolocation.on('background', () => {
+        console.log('[INFO] App is in background');
+      });
+  
+      BackgroundGeolocation.on('foreground', () => {
+        console.log('[INFO] App is in foreground');
+      });
+  
       BackgroundGeolocation.on('location', (location)=> {
           console.log(location);
          
@@ -217,7 +247,7 @@ export class AppService implements OnInit {
           
         //this.entrenamiento.distancia=(this.entrenamiento.velocidad_promedio*3.6/1000).toFixed(2)+'Km';
         this.entrenamiento.velocidad_promedio=_velocidad_promedio;
-          this.entrenamiento.distancia=kmTotales.toFixed(2)+'Km';
+          this.entrenamiento.distancia=kmTotales.toFixed(2);
           
           this.localSt.store('entrenamiento',this.entrenamiento);
           this.sendEntrenamiento('newPosition');
@@ -251,24 +281,42 @@ export class AppService implements OnInit {
           console.log('errrorrr acee');
         });
 
-        function onSuccess(acceleration) {
-          return;
-          console.log('Acceleration X: ' + acceleration.x + '\n' +
-                'Acceleration Y: ' + acceleration.y + '\n' +
-                'Acceleration Z: ' + acceleration.z + '\n' +
-                'Timestamp: '      + acceleration.timestamp + '\n');
-      }
+        this.startAccel(1000);
       
-      function onError() {
-          alert('onError!');
-      }
       
-      var options = { frequency: 3000 };  // Update every 3 seconds
-      
-      var watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
-//        navigator.accelerometer.clearWatch(watchID);
+//
 
+}
+  startAccel(frequency){
+    var options = { frequency: frequency };  // Update every 3 seconds
+      
+    this.watchAccelID = navigator.accelerometer.watchAcceleration((acceleration)=>{
+      this.sendAccel(acceleration);
+      if(this.getAcceration) {
+        this.AccelData.push(acceleration);      
+      }
+    }, this.onErrorAccel, options);
+ }
+ stopAccel(){
+  navigator.accelerometer.clearWatch(this.watchAccelID);
+ }
+
+  AccelData=[];
+  
+    
+    /* return;
+    console.log('Acceleration X: ' + acceleration.x + '\n' +
+          'Acceleration Y: ' + acceleration.y + '\n' +
+          'Acceleration Z: ' + acceleration.z + '\n' +
+          'Timestamp: '      + acceleration.timestamp + '\n'); */
+
+  saveAccel(){
+    this.localSt.store('accelometer',this.AccelData);
   }
+
+    onErrorAccel() {
+        console.log('onError!');
+    }
    
     setEntrenamientoStart(){
       /* this.entrenamiento.started=true;
@@ -507,7 +555,10 @@ export class AppService implements OnInit {
              successCallback, ()=>{console.log('errorss')},  options)
     }
     sendSteps(message: any) {
-        this.subjectSteps.next({ data:message });
+        
+    }
+    sendAccel(message: any){
+      this.subjectAccel.next({ data:message });
     }
     sendLocation(message: any) {
         this.subjectLocation.next({ info:message });
@@ -533,6 +584,9 @@ export class AppService implements OnInit {
     onStepsChange(): Observable<any> {
         return this.subjectSteps.asObservable();
     }
+    onAccelChange(): Observable<any> {
+      return this.subjectAccel.asObservable();
+  }
   
     onShareEntrenamientoChange(): Observable<any> {
       return this.subjetShareEntrenamiento.asObservable();
@@ -624,7 +678,7 @@ export class AppService implements OnInit {
          entrenamiento.saved=true;
          let miliseg=entrenamiento.stop-entrenamiento.start-(entrenamiento.paused_time*1000);
          entrenamiento.tiempo= new Date(miliseg).toISOString().substr(11, 8);
-         if(entrenamiento.Locations.length && location){
+         if(entrenamiento.Locations && entrenamiento.Locations.length && location){
            let LaPos=entrenamiento.Locations[0];
            let mts=this.getDistanceFromLatLonInKm(LaPos.latitude,LaPos.longitude,location.latitude,location.longitude)*1000;
            if(mts<80)
@@ -650,7 +704,7 @@ export class AppService implements OnInit {
     /*REMOVER LUEGO */
               
          entrenamiento.velocidad_promedio=_velocidad_promedio;
-         entrenamiento.distancia=kmTotales.toFixed(2)+'Km';
+         entrenamiento.distancia=kmTotales.toFixed(2);
          //entrenamiento.velocidad=entrenamiento.velocidad_promedio/3.6;
          entrenamiento.velocidad=(entrenamiento.velocidad_promedio/1000*3.6).toFixed(2)+' K/h';
          if(onlyInArea==true){

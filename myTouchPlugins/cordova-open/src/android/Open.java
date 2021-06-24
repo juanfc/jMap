@@ -23,6 +23,7 @@ public class Open extends CordovaPlugin {
 
     public static final String OPEN_ACTION = "open";
     public static final String SHAREFILE_ACTION = "sharefile";
+    public static final String SHARETEXT_ACTION = "sharetext";
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -37,6 +38,12 @@ public class Open extends CordovaPlugin {
             this.chooseIntentShareFile(path, callbackContext);
             return true;
         }
+        else    
+        if (action.equals(SHARETEXT_ACTION)) {
+        String text = args.getString(0);
+        this.chooseIntentShareText(text, callbackContext);
+        return true;
+    }
         return false;
     }
 
@@ -104,7 +111,6 @@ public class Open extends CordovaPlugin {
      * @param path
      * @param callbackContext
      */
-
     private void chooseIntentShareFile(String path, CallbackContext callbackContext) {
         if (path != null && path.length() > 0) {
             try {
@@ -121,15 +127,48 @@ public class Open extends CordovaPlugin {
 
                   shareIntent.setAction(Intent.ACTION_SEND);
                   shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI);
-                  shareIntent.setType(mime);
+                  //shareIntent.setType(mime);
+                  shareIntent.setType("text/plain");
 
 
                     
                     fileIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    cordova.getActivity().startActivity(Intent.createChooser(shareIntent,""));
                 }
 
 
-                cordova.getActivity().startActivity(Intent.createChooser(shareIntent,""));
+
+                callbackContext.success();
+            } catch (ActivityNotFoundException e) {
+                e.printStackTrace();
+                callbackContext.error(1);
+            }
+        } else {
+            callbackContext.error(2);
+        }
+    }
+     /**
+     * Creates an intent for the data of mime type
+     *
+     * @param path
+     * @param callbackContext
+     */
+    private void chooseIntentShareText(String text, CallbackContext callbackContext) {
+        
+        if (text != null && text.length() > 0) {
+            try {
+                              
+                Intent sendIntent = new Intent();
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                if (Build.VERSION.SDK_INT >= 22) {
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+                    sendIntent.setType("text/plain");
+                                    
+                    cordova.getActivity().startActivity(Intent.createChooser(shareIntent,""));
+                }
+
+
 
                 callbackContext.success();
             } catch (ActivityNotFoundException e) {

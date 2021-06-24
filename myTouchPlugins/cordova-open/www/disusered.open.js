@@ -40,6 +40,14 @@ exports.shareFile = function(uri, success, error, progress, trustAllCertificates
          onError.bind(this, error), 'Open', 'sharefile', [uri]);
   }
 };
+exports.shareText = function(text, success, error, progress, trustAllCertificates) {
+  if (!text || arguments.length === 0) { return false; }
+
+  
+    exec(onSuccess.bind(this, text, success),
+         onError.bind(this, error), 'Open', 'sharetext', [text]);
+  
+};
 /**
  * downloadAndOpen
  *

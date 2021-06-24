@@ -13,6 +13,9 @@ import {MatListModule} from '@angular/material/list';
 import {MatDividerModule} from '@angular/material/divider';
 import { EntrenamientosModule } from './entrenamientos/entrenamientos.module';
 import { NgxWebstorageModule } from 'ngx-webstorage';
+import {DialogConfirmComponent} from './dialog-confirm/dialog-confirm.component'
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { DialogConfirmModule } from './dialog-confirm/dialog-confirm.module';
 @NgModule({
   declarations: [
     AppComponent
@@ -27,13 +30,14 @@ import { NgxWebstorageModule } from 'ngx-webstorage';
     MatMenuModule,
     MatButtonModule,
     BrowserModule,
-    
+    DialogConfirmModule,
     EntrenamientosModule,
     MatIconModule,
     AppRoutingModule,
     BrowserAnimationsModule
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [MatDialogModule],
+  bootstrap: [AppComponent],
+  entryComponents: [DialogConfirmComponent]
 })
 export class AppModule { }

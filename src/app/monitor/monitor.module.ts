@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SettingComponent } from './setting.component';
+import { MonitorComponent } from './monitor.component';
 import { RouterModule, Routes } from '@angular/router';
 import { Route } from '@angular/router';
 import {  MatIconModule } from '@angular/material/icon';
@@ -10,14 +10,12 @@ import { HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import {MatSliderModule} from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+
 const thisRoute: Route[] = [
   {
     
-      path     : 'config',
-      component: SettingComponent,
-      data:{title:'Configuración'}
+      path     : 'monitor',
+      component: MonitorComponent
   }
 ];
 
@@ -25,13 +23,11 @@ const thisRoute: Route[] = [
 
 @NgModule({
   declarations: [
-    SettingComponent
+    MonitorComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
-    MatInputModule,
-    MatSlideToggleModule,
     MatMenuModule,        
     MatIconModule,
     MatSliderModule,
@@ -41,4 +37,4 @@ const thisRoute: Route[] = [
     RouterModule.forChild(thisRoute)
   ]
 })
-export class SettingModule { }
+export class MonitorModule { }

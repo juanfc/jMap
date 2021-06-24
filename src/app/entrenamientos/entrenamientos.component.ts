@@ -26,32 +26,39 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
  map
  arr=[];
   MapInterval
+  options;
+  
+  url='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   constructor(
     @Inject(AppService) appService: AppService,
     private http:HttpClient
     
   ){
+
     this.appService=appService;
+    
+    
+    
+    this.options = {
+      layers: [
+        tileLayer(this.url, { maxZoom: 16, attribution: '...' }),
+        marker([ -31.389366, -64.494915 ],{
+          icon: icon({
+            iconSize: [ 25, 41 ],
+            iconAnchor: [ 13, 41 ],
+            iconUrl: 'assets/marker-icon.png',
+            shadowUrl: 'assets/marker-shadow.png'
+        })}),
+  
+      ],
+      zoom: 15,
+      center: latLng(-31.388246158367238, -64.48196783165659)
+    };
     
   }
 
-  //url='https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
-  url='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-  options = {
-    layers: [
-      tileLayer(this.url, { maxZoom: 16, attribution: '...' }),
-      marker([ -31.389366, -64.494915 ],{
-        icon: icon({
-          iconSize: [ 25, 41 ],
-          iconAnchor: [ 13, 41 ],
-          iconUrl: 'assets/marker-icon.png',
-          shadowUrl: 'assets/marker-shadow.png'
-      })}),
-
-    ],
-    zoom: 15,
-    center: latLng(-31.388246158367238, -64.48196783165659)
-  };
+ 
+  
   entrenamiento
   TimerEntrenamiento
   distanciaEntrenamiento="0.0 Km";
@@ -142,6 +149,7 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
  lastPosition;
 
  getCurrentLocation(){
+  if(this.entrenamiento.started) return;
   console.log("getCurrentPosition");
   navigator.geolocation.getCurrentPosition((p)=>{
     this.currentLocation=p.coords;
@@ -164,6 +172,13 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
 
  this.map.setView( new L.LatLng(-31.388246158367238, -64.48196783165659),15);
  this.layer=this.map.addLayer(osm);
+ let config=this.appService.localSt.retrieve('config');
+ if(config.darkMap){
+  document.getElementById('map').style.filter="invert(1) sepia(13%) saturate(37%) hue-rotate(130deg) brightness(95%) contrast(80%)"
+}
+else{
+document.getElementById('map').style.filter="invert(0)"
+}
 
 }
 
@@ -183,13 +198,35 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
           this.entrenamiento.paused_time++;
         
         let miliseg=(((new Date()).getTime() - new Date(this.entrenamiento.start).getTime()))-this.entrenamiento.paused_time*1000;
-        this.distanciaEntrenamiento=this.entrenamiento.distancia;
+        this.distanciaEntrenamiento=this.entrenamiento.distancia+"Km";
         this.tiempoEntrenamiento=new Date(miliseg).toISOString().substr(11, 8);
         if(this.entrenamiento.paused){
 
           this.pasosEntrenamiento= this.entrenamiento.pasos_acumulados+" pasos";
         }
         else{
+          let config=this.appService.localSt.retrieve('config');
+          if(config.textSpeech){
+
+            if(this.entrenamiento.distancia>0.1){
+              if(!(this.entrenamiento.distancia % 1.0)){
+                //decir km en tanto tiempo                
+                let T=this.tiempoEntrenamiento.split(':');
+                let t=parseInt(T[0])*60*60 + parseInt(T[1])*60+parseInt(T[2]);
+                this.appService.textToSpeech("Distancia "+this.entrenamiento.distancia+" kilómetros en "+t+" minutos");
+                
+              }                        
+            }
+            let T=this.tiempoEntrenamiento.split(':');
+            let t=parseInt(T[0])*60*60 + parseInt(T[1])*60+parseInt(T[2]);
+            if(t){
+              if(!(t%600)){
+                // decir    
+                this.appService.textToSpeech("En "+(t/60)+" minutos has recorrido "+this.entrenamiento.distancia+ 'kilómetros');
+              }
+            }
+          }
+            
           this.appService.setTextBackGround('🕑 '+this.tiempoEntrenamiento+'  🚣🏾 '+this.distanciaEntrenamiento);
           this.pasosEntrenamiento= (this.entrenamiento.pasos_acumulados+this.entrenamiento.pasos)+" pasos";        
         }
@@ -324,11 +361,11 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
          // L.circle(pos, {radius: 1500,color:(pos[0]*10).toFixed(0)}).addTo(this.map);
           this.index++;
           this.ghostStartPos=this.index;
-          if(this.index==100){                        
+          /* if(this.index==100){                        
             let distanse =this.ghostMark.getLatLng().distanceTo(L.latLng(-31.388246158367238, -64.4819678316565));
             let km=(distanse/1000).toFixed(0);
             this.appService.textToSpeech("Distancia, "+km+" kilómetros");
-          }
+          } */
           
         
           this.arr.push(this.ghostMark.getLatLng());

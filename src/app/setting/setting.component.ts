@@ -8,6 +8,8 @@ import { AppService } from '../app.service';
 })
 export class SettingComponent implements OnInit {
   nombre="Tu nombre";
+  
+  config;
   public appService:AppService;
   constructor(
     @Inject(AppService) appService: AppService)
@@ -20,6 +22,8 @@ export class SettingComponent implements OnInit {
     if(user){
       this.nombre=user.nombre;
     }
+    this.config =this.appService.localSt.retrieve('config');
+    
     console.log('inicio setting');
     this.appService.sendTitle("Configuración");
     document.getElementById("settingContent").style.height=(window.innerHeight-60)+'px'; 
@@ -33,6 +37,8 @@ export class SettingComponent implements OnInit {
       user = {nombre:this.nombre}
     }
     this.appService.localSt.store('usuario',user);
+    this.appService.localSt.store('config',this.config);
+    this.appService.keepAwake(this.config.keepAwake);
   }
   checkAuth(){
     this.appService.verConfig()

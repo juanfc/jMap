@@ -13,10 +13,37 @@
           <input matInput [(ngModel)]="nombre">
         </mat-form-field>
       </p>
-      <button mat-button mat-raised-button (click)="save()" color="accent"><mat-icon>save</mat-icon>Guardar cambios</button>
+
+      <p>
+        
+        <mat-slide-toggle [(ngModel)]="config.darkMap">Mapa Oscuro</mat-slide-toggle>
+        <br>
+        Usalo para entrenar de noche sin que te moleste la luz de tu celular.
+      </p>
+
+
+      <p>
+        
+        <mat-slide-toggle [(ngModel)]="config.keepAwake">Mantener pantalla activa</mat-slide-toggle>
+        <br>
+        Si queres mantener activa tu pantalla en el entrenamiento activá esta opcion! (consumo de bateria extra)
+        
+      </p>
+      <p>
+        
+        <mat-slide-toggle [(ngModel)]="config.textSpeech">Háblame cuanto recorrí </mat-slide-toggle>
+        <br>
+        Contame como viene mi recorrido! "Tantos km en X tiempo"  y "En X tiempo tantos KM"
+        <br><br>
+      </p>
+      
+
+
+      <button mat-button mat-raised-button (click)="save()" color="accent"><mat-icon>save</mat-icon>Guardar</button>
+      &nbsp;
+      <button mat-button mat-raised-button (click)="checkAuth()" color="primary"><mat-icon>app_settings_alt</mat-icon>Permisos App</button>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-button mat-raised-button (click)="checkAuth()"><mat-icon>app_settings_alt</mat-icon>Configuración App </button>
       
     </mat-card-actions>
   </mat-card>

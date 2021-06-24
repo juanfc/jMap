@@ -1,23 +1,29 @@
-import { AfterViewInit, Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Inject, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { AppService } from './app.service';
 import { LocalStorageService } from 'ngx-webstorage';
 import { ActivatedRoute,  Router } from '@angular/router';
+import {MatSnackBar} from '@angular/material/snack-bar';
+
 declare var window;
 declare var device;
 declare var navigator;
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  providers:[MatSnackBar]
 })
 export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
   title = 'jMaps';
   pageTitle="Inicio";
+  mensaje="";
   public appService:AppService;
   constructor(
     @Inject(AppService) appService: AppService,
     public localSt:LocalStorageService,
+    private _snackBar: MatSnackBar,
     private router : Router,
+    private _ngZone: NgZone,
     private route: ActivatedRoute
   ){
     this.appService=appService;
@@ -26,29 +32,44 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     this.appService.onTitleChange().subscribe(obj=>{
       this.pageTitle=obj.title;
     })
+    let entre=this.localSt.retrieve('entrenamiento')
+       if(entre.started)
+          this.router.navigate(['/entrenamientos']);
+      
+        
+        this.router.navigate(['/inicio']);
   }
   ngOnDestroy(){
     console.log('Destroy app component');
   }
   List=[];
   timeExit;
+  openSnackBar(message: string, action: string) {
+  
+  }
   ngOnInit(){
     //for Test
-  
+    this.openSnackBar("hola","hola") ;
     
     //window.plugins.insomnia.allowSleepAgain()
-    console.log("appStart");
-     let entre=this.localSt.retrieve('entrenamiento')
-     if(entre.started)
-        this.router.navigate(['/entrenamientos']);
-
+    
     let parent=this;
     document.addEventListener("deviceready", ()=> {
-      console.log(parent);
+
       
       document.addEventListener("backbutton", (onBackKeyDown)=>{
         console.log(onBackKeyDown);
         console.log(parent);
+        this._ngZone.run(()=>{
+
+          if(this.mensaje) this.exit();
+          this.mensaje="Repita para cerrar!";
+          
+          setTimeout(() => {
+            this.mensaje="";
+          }, 2000);
+          
+        });
         switch(parent.router['location'].path()){
           case '/calendar':
           break;
@@ -58,7 +79,8 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
        
       
       
-      window.plugins.insomnia.keepAwake();
+      
+      
       window.addEventListener("deviceorientationabsolute", (event)=> {
 
         //console.log(event);
@@ -75,7 +97,10 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
       this.appService.StartServiceMobile();
       
       this.appService.checkAuth();
-      this.router.navigate(['/inicio']);
+      console.log(parent);
+      console.log("appStart");
+       
+      
        //if(this.localSt.retrieve('started'))
   }, false);
   }
@@ -109,9 +134,15 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
   open(){
     window.open("https://play.google.com/store/apps/details?id=com.actualsoft.jmap",'_new');  
   }
+  share(){
+    this.appService.shareText("https://play.google.com/store/apps/details?id=com.actualsoft.jmap");
+  }
   exit(){
     this.appService.setEntrenamientoStop();
     navigator.app.exitApp();
+  }
+  ayuda(){
+    
   }
 
 }
