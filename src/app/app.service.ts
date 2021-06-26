@@ -142,9 +142,46 @@ export class AppService implements OnInit {
         console.log(error);
       });
     }
-    GetExternalFile(){
-     
+    generateGpxFile(entrenamiento){
+      let trkpt="";
+
+      let head="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+      "<gpx\n"+
+      "version=\"1.1\"\n"+
+      "creator=\"Tus Actividades - https://play.google.com/store/apps/details?id=com.actualsoft.jmap\"\n"+
+      "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+
+      "xmlns=\"http://www.topografix.com/GPX/1/1\"\n"+
+      "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\"\n"+
+      "xmlns:gpxtpx=\"http://www.garmin.com/xmlschemas/TrackPointExtension/v1\">\n"+
+      "<metadata>\n"+
+      "<link href=\"https://play.google.com/store/apps/details?id=com.actualsoft.jmap\">\n"+
+      "<text>Mis Actividades</text>\n"+
+      "</link>\n"+
+      "<time>"+new Date(entrenamiento.start).toISOString()+"</time>\n"+
+      "</metadata>\n"+
+      "<trk>\n"+
+      "<name>Entrenamiento de"+ entrenamiento.user+"</name>\n"+
+      "<trkseg>\n";
+      let _close="</trkseg>\n"+
+      "</trk>\n"+
+      "</gpx>\n";
       
+      
+      entrenamiento.Locations.forEach((point)=>{
+        
+
+        trkpt+="<trkpt lat=\""+point.latitude+"\" lon=\""+point.longitude+"\">\n"+
+        "<ele>"+parseFloat(point.altitude).toFixed(2)+"</ele>\n"+
+        "<speed>"+parseFloat(point.speed).toFixed(2)+"</speed>\n"+
+        "<time>"+new Date(point.time).toISOString()+"</time>\n"+
+        "</trkpt>\n";
+        //"<course>"+parseFloat(point.bearing).toFixed(2)+"</course>\n"+
+
+      });
+
+      return head+trkpt+_close;
+    }
+    GetExternalFile(){
       
       window.plugins.fileAssociation.getAssociatedData(null,
          (success)=> {

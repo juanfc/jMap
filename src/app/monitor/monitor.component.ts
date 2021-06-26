@@ -112,7 +112,15 @@ export class MonitorComponent implements OnInit,AfterViewInit {
       });
   }
   update(){
-   
+    
+    this.appService.Entrenamientos[0].Locations.forEach(point => {
+      let alt=parseInt(point.altitude);
+      this.dataX.push(alt)
+      let d=new Date(point.time).toLocaleTimeString();
+      
+      this.xValues.push(d);
+   }); 
+    this.chart.update();
   }
   removing=false;
 

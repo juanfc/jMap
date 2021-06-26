@@ -33,5 +33,16 @@ export class InicioComponent implements OnInit,AfterViewInit {
     //console.log('inicio oninit');
     //this.appService.sendTitle("Inicio");
   }
+  test(){
+    let tmp=this.appService.localSt.retrieve('entrenamientos');
+    let Entrenamientos=[];
+    
+    for(let x= 0;x<10;x++){
+      Entrenamientos.push(tmp[0]);
+    }
+
+    this.appService.localSt.store('entrenamientos',Entrenamientos);
+    
+  }
 
 }

@@ -233,7 +233,7 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
     }, 100);
     this._changeDetectorRef.detectChanges();
   }
-  shareEntrenamiento(entrenamiento){
+  shareEntrenamiento(entrenamiento,gpx){
     let user=this.appService.localSt.retrieve('usuario');
     let nombre ="Usuario"
     if(user){
@@ -241,9 +241,19 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
       entrenamiento.user=user.nombre;
     }
     let str="";
-    this.appService.setTempFile(nombre+"-"+entrenamiento.fecha+".json", JSON.stringify(entrenamiento));
+    if(gpx){
+      let data=this.appService.generateGpxFile(entrenamiento);
+      console.log(data);
+      this.appService.setTempFile(nombre+"-"+entrenamiento.fecha+".gpx", data);
+    }
+    else{
+
+      this.appService.setTempFile(nombre+"-"+entrenamiento.fecha+".json", JSON.stringify(entrenamiento));
+    }
+
     //this.appService.writeFile('JuanEntrenamiento.json', JSON.stringify(entrenamiento))
   }
+
   stopPaintGhost(entrenamiento){
     entrenamiento.play=false;    
     clearInterval(this.MapInterval);
@@ -313,10 +323,11 @@ export class CalendarComponent implements OnInit,OnDestroy,AfterViewInit {
           //this.ghostMark.setZoom(7)
           this.map.panTo(this.ghostMark.getLatLng(),{maxZoom:10});
          // L.circle(pos, {radius: 1500,color:(pos[0]*10).toFixed(0)}).addTo(this.map);
+         console.log(location.altitude);
          if(location_next) {
-           let dist=this.appService.getDistanceFromLatLonInKm(location.latitude,location.longitude,location_next.latitude,location_next.longitude);           
-           let inter=(location_next.time-location.time)/1000;
-           console.log("distancia:"+(dist*1000).toFixed(2)+ "   Segu:"+inter);
+           //let dist=this.appService.getDistanceFromLatLonInKm(location.latitude,location.longitude,location_next.latitude,location_next.longitude);           
+           //let inter=(location_next.time-location.time)/1000;
+        //   console.log("distancia:"+(dist*1000).toFixed(2)+ "   Segu:"+inter);
           }
           //this.SliderValue=this.index;
           this.ghostStartPos++;

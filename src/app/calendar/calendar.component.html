@@ -81,10 +81,23 @@
     <mat-card-actions style="text-align: right;">
         <div style="text-align: right;width: 100%;">
           
-          <button mat-button mat-raised-button *ngIf="entrenamiento.saved"  (click)="shareEntrenamiento(entrenamiento)" color="primary" >
+          <button mat-button mat-raised-button *ngIf="entrenamiento.saved" [matMenuTriggerFor]="menu"  color="primary" >
             <mat-icon mat-list-icon>share</mat-icon>
             <span></span>            
-        </button>  
+        </button>
+        <mat-menu #menu="matMenu">
+          
+
+          <button mat-menu-item (click)="shareEntrenamiento(entrenamiento,false)"  color="primary" >
+            <mat-icon mat-list-icon>run_circle</mat-icon>
+            <span>Compartir con...</span>            
+        </button>
+        <button mat-menu-item (click)="shareEntrenamiento(entrenamiento,true)"  color="primary" >
+          <mat-icon mat-list-icon>share_location</mat-icon>
+          <span>Exportar GPX...</span>            
+      </button>
+
+        </mat-menu>  
         <button mat-button mat-raised-button *ngIf="!entrenamiento.saved" (click)="guardar(entrenamiento)" color="primary" >
           <mat-icon mat-list-icon>save</mat-icon>
           <span>Guardar</span>            
