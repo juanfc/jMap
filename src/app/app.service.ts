@@ -60,6 +60,7 @@ export class AppService implements OnInit {
     private subjectSteps = new Subject<any>();
     private subjectAccel = new Subject<any>();
     private subjectAuth  = new Subject<any>();
+    private subjectMessage =new Subject<any>();
     private subjetShareEntrenamiento = new Subject<any>();
     private subjectEntrenamiento=new Subject<any>();
     private subjetTitle =new Subject<any>();
@@ -71,6 +72,7 @@ export class AppService implements OnInit {
       private router : Router,
       private _ngZone: NgZone
     ){
+      
         console.log('Se construye  AppService!');
       if(this.localSt.retrieve('entrenamientos')){
         this.Entrenamientos=this.getEntrenamientos();
@@ -177,8 +179,34 @@ export class AppService implements OnInit {
       window.plugins.insomnia.allowSleepAgain()
     }
     watchAccelID;
+    configBackgroundGeolocation(){
+      let gps_config=this.localSt.retrieve('gps_config');
+      BackgroundGeolocation.configure({
+        startOnBoot:false,
+        locationProvider: gps_config.locationProvider,
+        desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+        stationaryRadius: gps_config.stationaryRadius,
+        distanceFilter: gps_config.distanceFilter,
+        startForeground:false,
+        notificationsEnabled:true,
+        notificationTitle: 'Seguimiento en segundo plano',
+        notificationText: '',
+        debug: gps_config.debug,
+        interval: gps_config.interval,
+        fastestInterval: gps_config.fastestInterval,
+        activitiesInterval: gps_config.activitiesInterval,
+        stopOnTerminate: false // enable this to clear background location settings when the app terminates
+      });
+    }
+    //
+    getSensor(){
+      window.sensors.enableSensor("LIGHT"); 
+      setInterval(() => {
+        window.sensors.getState((a)=>{console.log(a)}, (a)=>{console.log(a)});
+      },1000);
+    }
     StartServiceMobile(){
-
+      this.getSensor();
       let config=this.localSt.retrieve('config');
       if(!config){
         config={'keepAwake':false,'darkMap':false,'textSpeech':false};
@@ -190,22 +218,22 @@ export class AppService implements OnInit {
       this.GetExternalFile();
             
       this.getFileFromShare();
-      BackgroundGeolocation.configure({
-        startOnBoot:false,
-        locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-        desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-        stationaryRadius: 1,
-        distanceFilter: 1,
-        startForeground:false,
-        notificationsEnabled:true,
-        notificationTitle: 'Seguimiento en segundo plano',
-        notificationText: '',
-        debug: true,
-        interval: 2000,
-        fastestInterval: 3000,
-        activitiesInterval: 5000,
-        stopOnTerminate: false // enable this to clear background location settings when the app terminates
-      });
+      let gps_config=this.localSt.retrieve('gps_config');
+      
+      if(!gps_config){
+        gps_config={
+          'debug':false,
+          'stationaryRadius':2,
+          'distanceFilter':2,
+          'interval':5000,
+          'fastestInterval':3000,
+          'activitiesInterval':5000,
+          'locationProvider':1};
+          this.localSt.store('gps_config',gps_config);
+      }
+      
+      this.configBackgroundGeolocation();
+
       BackgroundGeolocation.on('background', () => {
         console.log('[INFO] App is in background');
       });
@@ -259,6 +287,14 @@ export class AppService implements OnInit {
         BackgroundGeolocation.on('stationary', (stationaryLocation)=> {
           console.log("Stationary");
           console.log(stationaryLocation);
+          if(this.entrenamiento.started){
+            this.stopBackGroundGeoLocation();
+            setTimeout(() => {
+              this.startBackGroundGeoLocation().subscribe((result)=>{
+                console.log(result);
+              });
+            }, 1000*10);
+          }
           // handle stationary locations here
         });
         BackgroundGeolocation.checkStatus((status)=> {
@@ -560,6 +596,9 @@ export class AppService implements OnInit {
     sendAccel(message: any){
       this.subjectAccel.next({ data:message });
     }
+    sendMessage(data: any){
+      this.subjectMessage.next(data);
+    }
     sendLocation(message: any) {
         this.subjectLocation.next({ info:message });
     }
@@ -584,6 +623,9 @@ export class AppService implements OnInit {
     onStepsChange(): Observable<any> {
         return this.subjectSteps.asObservable();
     }
+    onMessageChange(): Observable<any> {
+      return this.subjectMessage.asObservable();
+  }
     onAccelChange(): Observable<any> {
       return this.subjectAccel.asObservable();
   }
@@ -602,7 +644,9 @@ export class AppService implements OnInit {
     onLocationChange(): Observable<any> {
         return this.subjectLocation.asObservable();
     }
-
+    showMessage(text,timeout=2000){
+      this.sendMessage({text:text,timeout:timeout});
+    }
     getStatus(){
         return "ok";
     }

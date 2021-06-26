@@ -50,6 +50,14 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
   ngOnInit(){
     //for Test
     this.openSnackBar("hola","hola") ;
+    this.appService.onMessageChange().subscribe(data=>{
+      console.log("onmessaje",data);
+        this.mensaje=data.text;
+          
+          setTimeout(() => {
+            this.mensaje="";
+          }, data.timeout);
+    });
     
     //window.plugins.insomnia.allowSleepAgain()
     

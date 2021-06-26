@@ -1,6 +1,10 @@
-<div id="settingContent" style="height: 100%;">
+<div id="settingContent" style="height: 100%;overflow-y: auto;">
+  <mat-tab-group (selectedTabChange)="selectedTabChange($event)">
+    <mat-tab label="General"> 
 
-  <mat-card >
+    
+<div style="overflow-y: auto;height: 100%;" id="settingGeneral">
+  <mat-card>
     <mat-card-header>      
       <mat-card-title></mat-card-title>
       <mat-card-subtitle>Configuración de aplicación</mat-card-subtitle>
@@ -47,4 +51,112 @@
       
     </mat-card-actions>
   </mat-card>
+</div>
+  
+</mat-tab>
+<mat-tab label="GPS" > 
+  <div style="overflow-y: auto;height: 100%;" id="settingGps">
+    <mat-card>
+      <mat-card-header>      
+      <mat-card-title></mat-card-title>
+      <mat-card-subtitle>Configuración de aplicación</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>Radio de inactividad</mat-label>
+        <input matInput type="number" [(ngModel)]="gps_config.stationaryRadius">
+      </mat-form-field>
+      Metros
+      
+      
+      <div>
+        Radio estacionario en metros. Cuando está parado, la distancia mínima que el dispositivo debe moverse más allá de la ubicación estacionaria para que se active el seguimiento en Segundo plano.
+      </div>
+      <br>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>Filtro de distancia</mat-label>
+        <input matInput type="number" [(ngModel)]="gps_config.distanceFilter">
+      </mat-form-field>
+      Metros
+ 
+      
+      <div>
+        La distancia mínima (medida en metros) que un dispositivo debe moverse horizontalmente antes de que se genere un evento de actualización.
+      </div>
+      
+      <br>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>Intervalo</mat-label>
+        <input matInput type="number" [(ngModel)]="gps_config.interval">
+      </mat-form-field>
+      milisegundos
+      
+      
+      <div>
+        El intervalo de tiempo mínimo entre actualizaciones de ubicación en milisegundos. 
+      </div>          
+      <br>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>Intervalo mas Rapido</mat-label>
+        <input matInput type="number" [(ngModel)]="gps_config.fastestInterval">
+      </mat-form-field>
+      milisegundos
+      
+      
+      <div>
+        La tasa más rápida en milisegundos a la que su aplicación puede manejar actualizaciones de ubicación. 
+      </div>    
+      <br>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>Interval en actividad</mat-label>
+        <input matInput type="number" [(ngModel)]="gps_config.activitiesInterval">
+      </mat-form-field>
+      milisegundos
+      
+      
+      <div>
+        Tasa en milisegundos a la que se produce el reconocimiento de actividad. Los valores más altos darán como resultado menos detecciones de actividad y, al mismo tiempo, mejorarán la duración de la batería. 
+      </div>   
+      <br>
+      <h2>Proveedor GPS</h2>
+      <mat-radio-group [(ngModel)]="gps_config.locationProvider" aria-label="Select an option">
+        <mat-radio-button [value]=1>Actividad</mat-radio-button>&nbsp;
+        <mat-radio-button [value]=0>Filtro de distancia</mat-radio-button>
+      </mat-radio-group>
+      <br><br>
+      <div>
+        <h2>Actividad:</h2>
+        <p>
+          Es mejor usar este como proveedor de ubicación en primer plano (pero también funciona en segundo plano).
+        </p>
+        <br>
+        <h2>Filtro de distancia:</h2>
+        <p>
+          Este es un proveedor clásico. Es mejor usar este como proveedor de ubicación en segundo plano.
+          Utiliza API estacionaria y filtro de distancia elástica para lograr un uso óptimo de la batería y los datos.
+        </p>
+        <span style="color: white;font-size: 17px;font-weight: 400;" (click)="goUrl()"> Para mas información haga click aca</span>
+      </div>     
+      <br>
+      <p>
+        
+        <mat-slide-toggle [(ngModel)]="gps_config.debug">Depuración</mat-slide-toggle>
+        <br>
+        Cuando está habilitado, el complemento emitirá sonidos para eventos de ciclo de vida de geolocalización en segundo plano. Consulte la tabla de depuración de sonidos.
+      </p>  
+      <br><br>
+      <button mat-button mat-raised-button (click)="saveGps()" color="accent"><mat-icon>save</mat-icon>Guardar</button>
+    </mat-card-content>
+  </mat-card>
+</div>
+  
+</mat-tab>
+
+</mat-tab-group>
 </div>

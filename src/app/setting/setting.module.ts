@@ -11,6 +11,9 @@ import { MatCardModule } from '@angular/material/card';
 import {MatSliderModule} from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatRadioModule} from '@angular/material/radio';
+
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 const thisRoute: Route[] = [
   {
@@ -31,6 +34,8 @@ const thisRoute: Route[] = [
     CommonModule,
     FormsModule,
     MatInputModule,
+    MatTabsModule,
+    MatRadioModule,
     MatSlideToggleModule,
     MatMenuModule,        
     MatIconModule,

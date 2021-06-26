@@ -5,6 +5,7 @@ import 'leaflet-rotatedmarker';
 import { HttpClient } from '@angular/common/http';
 import * as moment from 'moment';
 declare var L;
+
 @Component({
   selector: 'app-entrenamientos',
   templateUrl: './entrenamientos.component.html',
@@ -190,8 +191,10 @@ document.getElementById('map').style.filter="invert(0)"
     this.Locations =this.appService.getEntrenamiento('Locations');
     
 
-      
+    let seDijo=0;
+    console.log("se inicia Interval");
     this.TimerEntrenamiento=setInterval(()=>{
+      console.log("Intervalo en entrenamiento!");
       this.entrenamiento=this.appService.getEntrenamiento();
       if(this.entrenamiento.started){
         if(this.entrenamiento.paused)
@@ -209,16 +212,19 @@ document.getElementById('map').style.filter="invert(0)"
           if(config.textSpeech){
 
             if(this.entrenamiento.distancia>0.1){
-              if(!(this.entrenamiento.distancia % 1.0)){
+              if((this.entrenamiento.distancia % 1.0)>=0 && (this.entrenamiento.distancia % 1.0)<0.12 && seDijo!=parseInt(this.entrenamiento.distancia)){
                 //decir km en tanto tiempo                
+                seDijo=parseInt(this.entrenamiento.distancia);
                 let T=this.tiempoEntrenamiento.split(':');
-                let t=parseInt(T[0])*60*60 + parseInt(T[1])*60+parseInt(T[2]);
-                this.appService.textToSpeech("Distancia "+this.entrenamiento.distancia+" kilómetros en "+t+" minutos");
+                let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
+                let s='s';
+                if(parseInt(this.entrenamiento.distancia)==1) s='';
+                this.appService.textToSpeech("Distancia "+parseInt(this.entrenamiento.distancia)+" kilómetro"+s+" en "+(t/60).toFixed(0)+" minutos");
                 
               }                        
             }
             let T=this.tiempoEntrenamiento.split(':');
-            let t=parseInt(T[0])*60*60 + parseInt(T[1])*60+parseInt(T[2]);
+            let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
             if(t){
               if(!(t%600)){
                 // decir    
