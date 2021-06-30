@@ -75,6 +75,22 @@
         Radio estacionario en metros. Cuando está parado, la distancia mínima que el dispositivo debe moverse más allá de la ubicación estacionaria para que se active el seguimiento en Segundo plano.
       </div>
       <br>
+
+      
+      <p style="font-size: 14px;font-weight: 500;">Extra Inactividad</p>
+        <mat-slide-toggle [(ngModel)]="gps_config.forceStationaryUpdate">Forzar actualización cuando se esta inactivo</mat-slide-toggle>
+      
+      
+      
+      
+      <div>
+        Cuando Usted se queda quieto por un perido de tiempo, el GPS deja de tomar la posicion, cuando detecta movimiento vuelve a recibir su posicion.
+        Hay Equipos que se demoran demaciado tiempo. Esta opcion Obliga a mantener activa la posicion. Genera mas Puntos.
+
+      </div>
+      <br>
+
+      
       
       <mat-form-field class="example-full-width">
         <mat-label>Filtro de distancia</mat-label>

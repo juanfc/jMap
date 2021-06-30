@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { AppService } from '../app.service';
 import { tileLayer, latLng,marker,icon } from 'leaflet';
 import 'leaflet-rotatedmarker';
@@ -32,7 +32,9 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
   url='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
   constructor(
     @Inject(AppService) appService: AppService,
-    private http:HttpClient
+    private http:HttpClient,
+    private ngZone: NgZone,
+    private _changeDetectorRef: ChangeDetectorRef
     
   ){
 
@@ -75,7 +77,7 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
     this.map.remove();
     this.drawMap();
     this.Locations=[];
-    if(this.ghostLocations)
+    if(this.ghostLocations.length)
       this.startPaintGhost();
     this.appService.setEntrenamientoStart();    
     
@@ -85,15 +87,19 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
     this.ghostLocations=[];
     this.ghostInfo="";
     this.map.remove();   
+    this.mark="";
     this.drawMap();
 
   }
   ArrGhost=[];
   setGhost(entrenamiento){
+    this.appService.dbGetEntrenamientosLocations(entrenamiento.id_entrenamiento).subscribe((Locations)=>{
+      this.ghostLocations=Locations;
+      this.ghostInfo=entrenamiento.fecha_corta+' Distancia:'+entrenamiento.distancia+' Tiempo:'+entrenamiento.tiempo;
+      this.previewPathGhost();
+    });
     console.log(entrenamiento);
-    this.ghostLocations=entrenamiento.Locations;
-    this.ghostInfo=entrenamiento.fecha_corta+' Distancia:'+entrenamiento.distancia+' Tiempo:'+entrenamiento.tiempo;
-    this.previewPathGhost();
+    
   }
   previewPathGhost(){
     this.map.remove();   
@@ -135,10 +141,13 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
        }
     }
   }
-
+  loading:boolean=false;
+  loading_value=0;
   stopEntrenamiento(){
-    this.appService.setEntrenamientoStop();    
-    
+    this.loading=true;
+    this.appService.setEntrenamientoStop().subscribe((res)=>{
+      this.loading=false;
+    });        
   }
 
   pauseEntrenamiento(){
@@ -153,12 +162,17 @@ export class EntrenamientosComponent implements OnInit, OnDestroy {
   if(this.entrenamiento.started) return;
   console.log("getCurrentPosition");
   navigator.geolocation.getCurrentPosition((p)=>{
+    console.log("getCurrentPosition Return",p);
     this.currentLocation=p.coords;
     if(!this.lastPosition) 
       this.lastPosition={latitude:0,longitude:0};
     let mts=this.appService.getDistanceFromLatLonInKm(this.lastPosition.latitude,this.lastPosition.longitude,this.currentLocation.latitude,this.currentLocation.longitude)*1000;
-    if(mts>50)
-      this.EntrenamientosHistory= this.appService.getEntrenamientos(this.currentLocation,true);
+    if(mts>50){
+
+       this.appService.getEntrenamientos(this.currentLocation,true).subscribe((data)=>{
+        this.EntrenamientosHistory=data;  
+      });
+    }
     
       this.lastPosition=p.coords;
     console.log(p)
@@ -190,63 +204,69 @@ document.getElementById('map').style.filter="invert(0)"
     this.appService.sendTitle("Entrenamientos");
     this.Locations =this.appService.getEntrenamiento('Locations');
     
-
+    this.appService.onLoadingChange().subscribe((res)=>{
+      this.loading_value=res.value;
+      this._changeDetectorRef.detectChanges();
+      
+      console.log(res);
+      
+    });
     let seDijo=0;
     console.log("se inicia Interval");
-    this.TimerEntrenamiento=setInterval(()=>{
-      console.log("Intervalo en entrenamiento!");
-      this.entrenamiento=this.appService.getEntrenamiento();
-      if(this.entrenamiento.started){
-        if(this.entrenamiento.paused)
-          this.entrenamiento.paused_time++;
-        
-        let miliseg=(((new Date()).getTime() - new Date(this.entrenamiento.start).getTime()))-this.entrenamiento.paused_time*1000;
-        this.distanciaEntrenamiento=this.entrenamiento.distancia+"Km";
-        this.tiempoEntrenamiento=new Date(miliseg).toISOString().substr(11, 8);
-        if(this.entrenamiento.paused){
+    this.ngZone.run(()=>{
+      this.TimerEntrenamiento=setInterval(()=>{
+        //console.log("Intervalo en entrenamiento!");
+        this.entrenamiento=this.appService.getEntrenamiento();
+        if(this.entrenamiento.started){
+          if(this.entrenamiento.paused)
+            this.entrenamiento.paused_time++;
+          
+          let miliseg=(((new Date()).getTime() - new Date(this.entrenamiento.start).getTime()))-this.entrenamiento.paused_time*1000;
+          this.distanciaEntrenamiento=this.entrenamiento.distancia+"Km";
+          this.tiempoEntrenamiento=new Date(miliseg).toISOString().substr(11, 8);
+          if(this.entrenamiento.paused){
 
-          this.pasosEntrenamiento= this.entrenamiento.pasos_acumulados+" pasos";
-        }
-        else{
-          let config=this.appService.localSt.retrieve('config');
-          if(config.textSpeech){
+            this.pasosEntrenamiento= this.entrenamiento.pasos_acumulados+" pasos";
+          }
+          else{
+            let config=this.appService.localSt.retrieve('config');
+            if(config.textSpeech){
 
-            if(this.entrenamiento.distancia>0.1){
-              if((this.entrenamiento.distancia % 1.0)>=0 && (this.entrenamiento.distancia % 1.0)<0.12 && seDijo!=parseInt(this.entrenamiento.distancia)){
-                //decir km en tanto tiempo                
-                seDijo=parseInt(this.entrenamiento.distancia);
-                let T=this.tiempoEntrenamiento.split(':');
-                let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
-                let s='s';
-                if(parseInt(this.entrenamiento.distancia)==1) s='';
-                this.appService.textToSpeech("Distancia "+parseInt(this.entrenamiento.distancia)+" kilómetro"+s+" en "+(t/60).toFixed(0)+" minutos");
-                
-              }                        
-            }
-            let T=this.tiempoEntrenamiento.split(':');
-            let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
-            if(t){
-              if(!(t%600)){
-                // decir    
-                this.appService.textToSpeech("En "+(t/60)+" minutos has recorrido "+this.entrenamiento.distancia+ 'kilómetros');
+              if(this.entrenamiento.distancia>0.1){
+                if((this.entrenamiento.distancia % 1.0)>=0 && (this.entrenamiento.distancia % 1.0)<0.12 && seDijo!=parseInt(this.entrenamiento.distancia)){
+                  //decir km en tanto tiempo                
+                  seDijo=parseInt(this.entrenamiento.distancia);
+                  let T=this.tiempoEntrenamiento.split(':');
+                  let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
+                  let s='s';
+                  if(parseInt(this.entrenamiento.distancia)==1) s='';
+                  this.appService.textToSpeech("Distancia "+parseInt(this.entrenamiento.distancia)+" kilómetro"+s+" en "+(t/60).toFixed(0)+" minutos");
+                  
+                }                        
+              }
+              let T=this.tiempoEntrenamiento.split(':');
+              let t=(parseInt(T[0])*60*60) + (parseInt(T[1])*60)+parseInt(T[2]);
+              if(t){
+                if(!(t%600)){
+                  // decir    
+                  this.appService.textToSpeech("En "+(t/60)+" minutos has recorrido "+this.entrenamiento.distancia+ 'kilómetros');
+                }
               }
             }
+              
+            this.appService.setTextBackGround('🕑 '+this.tiempoEntrenamiento+'  🚣🏾 '+this.distanciaEntrenamiento);
+            this.pasosEntrenamiento= (this.entrenamiento.pasos_acumulados+this.entrenamiento.pasos)+" pasos";        
           }
-            
-          this.appService.setTextBackGround('🕑 '+this.tiempoEntrenamiento+'  🚣🏾 '+this.distanciaEntrenamiento);
-          this.pasosEntrenamiento= (this.entrenamiento.pasos_acumulados+this.entrenamiento.pasos)+" pasos";        
+
+
+          
+          
+        
+          
         }
-
-
-        
-        
-       
-        
-      }
-    },1000);
+      },1000);
+    });
       
-
-
     this.drawMap();
     this.dibuja();
    
@@ -302,7 +322,9 @@ document.getElementById('map').style.filter="invert(0)"
     }
   }
   getEntrenamientosHistory(event){
-    this.EntrenamientosHistory= this.appService.getEntrenamientos();
+    this.appService.getEntrenamientos().subscribe((data)=>{
+      this.EntrenamientosHistory=data;
+    });
     event.preventDefault();
     event.stopPropagation();
     console.log(event);
@@ -331,59 +353,61 @@ document.getElementById('map').style.filter="invert(0)"
     this.ghostStartPos=0;
     this.index=0;
     this.ghostTime=new Date(this.ghostLocations[this.ghostStartPos].time);
-    this.MapInterval= setInterval(()=>{
-    this.ghostTime.setMilliseconds(this.ghostTime.getMilliseconds()+1000);    
+    this.ngZone.run(()=>{
+      this.MapInterval= setInterval(()=>{
+      this.ghostTime.setMilliseconds(this.ghostTime.getMilliseconds()+1000);    
 
-    if(this.index <this.ghostLocations.length-1){
-      let location=this.ghostLocations[this.index];
-      let posTime=new Date(this.ghostLocations[this.index].time);
-      this.ghostTimeStr=this.ghostTime.toTimeString().substr(0,8);
-      console.log(this.ghostTimeStr);
-      if(this.ghostTime>=posTime)
-      {      
-        if(!this.ghostMark){
+      if(this.index <this.ghostLocations.length-1){
+        let location=this.ghostLocations[this.index];
+        let posTime=new Date(this.ghostLocations[this.index].time);
+        this.ghostTimeStr=this.ghostTime.toTimeString().substr(0,8);
+        console.log(this.ghostTimeStr);
+        if(this.ghostTime>=posTime)
+        {      
+          if(!this.ghostMark){
 
-          this.ghostMark=L.marker([location.latitude,location.longitude],{        
-            title:'sadasdasd',
-            icon: icon({
-              iconSize: [ 25, 41 ],
-              iconAnchor: [ 13, 41 ],
-              iconUrl: 'assets/marker-icon-ghost.png',
-              // shadowUrl: 'assets/marker-shadow.png'
-            }),
-          }).addTo(this.map);
+            this.ghostMark=L.marker([location.latitude,location.longitude],{        
+              title:'sadasdasd',
+              icon: icon({
+                iconSize: [ 25, 41 ],
+                iconAnchor: [ 13, 41 ],
+                iconUrl: 'assets/marker-icon-ghost.png',
+                // shadowUrl: 'assets/marker-shadow.png'
+              }),
+            }).addTo(this.map);
+            
+            //this.ghostMark.setRotationAngle(180);
+            
+          }
+          else{
+            
+            let pos=[location.latitude,location.longitude];
+            this.ghostMark.setLatLng(pos);
+            //this.ghostMark.setRotationAngle(180);
+            
+            //this.ghostMark.setZoom(7)
+          // this.map.panTo(this.ghostMark.getLatLng(),{maxZoom:10});
+          // L.circle(pos, {radius: 1500,color:(pos[0]*10).toFixed(0)}).addTo(this.map);
+            this.index++;
+            this.ghostStartPos=this.index;
+            /* if(this.index==100){                        
+              let distanse =this.ghostMark.getLatLng().distanceTo(L.latLng(-31.388246158367238, -64.4819678316565));
+              let km=(distanse/1000).toFixed(0);
+              this.appService.textToSpeech("Distancia, "+km+" kilómetros");
+            } */
+            
           
-          //this.ghostMark.setRotationAngle(180);
-          
-        }
-        else{
-          
-          let pos=[location.latitude,location.longitude];
-          this.ghostMark.setLatLng(pos);
-          //this.ghostMark.setRotationAngle(180);
-          
-          //this.ghostMark.setZoom(7)
-         // this.map.panTo(this.ghostMark.getLatLng(),{maxZoom:10});
-         // L.circle(pos, {radius: 1500,color:(pos[0]*10).toFixed(0)}).addTo(this.map);
-          this.index++;
-          this.ghostStartPos=this.index;
-          /* if(this.index==100){                        
-            let distanse =this.ghostMark.getLatLng().distanceTo(L.latLng(-31.388246158367238, -64.4819678316565));
-            let km=(distanse/1000).toFixed(0);
-            this.appService.textToSpeech("Distancia, "+km+" kilómetros");
-          } */
-          
-        
-          this.arr.push(this.ghostMark.getLatLng());
-          if(this.arr.length==2){
-            let polyline=L.polyline(this.arr, {color: 'blue',weight: 4,opacity: 0.2}).addTo(this.map);
-            this.arr=[this.arr[1]];
+            this.arr.push(this.ghostMark.getLatLng());
+            if(this.arr.length==2){
+              let polyline=L.polyline(this.arr, {color: 'blue',weight: 4,opacity: 0.2}).addTo(this.map);
+              this.arr=[this.arr[1]];
+            }
           }
         }
       }
-    }
-       
-    },1000);
+        
+      },1000);
+    });
   }
   
   dibuja(location?){

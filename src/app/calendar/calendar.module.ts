@@ -10,7 +10,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import {MatSliderModule} from '@angular/material/slider';
 import { FormsModule } from '@angular/forms';
-
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 const thisRoute: Route[] = [
   {
     
@@ -30,7 +30,7 @@ const thisRoute: Route[] = [
     CommonModule,
     FormsModule,
     MatMenuModule,
-        
+    MatProgressSpinnerModule,
     MatIconModule,
     MatSliderModule,
     MatButtonModule,

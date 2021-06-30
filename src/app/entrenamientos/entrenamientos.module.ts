@@ -10,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 const thisRoute: Route[] = [
   {
     
@@ -32,6 +33,7 @@ const thisRoute: Route[] = [
     MatMenuModule,  
     MatListModule,
     LeafletModule,
+    MatProgressSpinnerModule,
     RouterModule.forChild(thisRoute)
   ]
 })

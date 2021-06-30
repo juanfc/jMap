@@ -3,3 +3,27 @@ body{
     margin: 0px;
     display: inline;
 }
+.MiDivCenter {
+    position: fixed; /* or absolute */
+    top: 50%;
+    left: 50%;
+    /* bring your own prefixes */
+    transform: translate(-50%, -50%);
+  }
+  .myDivInfo {
+    background-color: dimgray;
+    position: absolute;
+    display: true;
+    width: 90%;
+    height: 30%;
+    top: 30%;
+    z-index: 2000;
+    border-radius: 7px;
+    text-align: center;
+    right: 5%;
+    left: 5%;
+    padding-top: 10px;
+    font-size: 15px;
+    color: white;
+    font-weight: 500;
+  }

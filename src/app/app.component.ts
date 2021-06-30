@@ -40,8 +40,10 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     private route: ActivatedRoute
   ){
     this.appService=appService;
+    
   }
   ngAfterViewInit(){
+    this.appService.showInfo();
     this.appService.onTitleChange().subscribe(obj=>{
       this.pageTitle=obj.title;
     })
@@ -77,7 +79,10 @@ export class AppComponent implements OnInit,OnDestroy,AfterViewInit {
     let parent=this;
     document.addEventListener("deviceready", ()=> {
 
-      
+      window.sqlitePlugin.echoTest(function() {
+        console.log('ECHO test OK');
+      });
+     
       document.addEventListener("backbutton", (onBackKeyDown)=>{
         console.log(onBackKeyDown);
         console.log(parent);

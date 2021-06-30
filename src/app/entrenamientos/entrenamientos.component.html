@@ -1,3 +1,20 @@
+<div *ngIf="loading" style="height: 100%;width: 100%; position:absolute;z-index: 2000;background-color: grey;opacity: 0.5; display: flex; 
+justify-content: center; 
+align-items: center;
+">
+</div>
+<div class="myDivInfo"  *ngIf="loading"  style="opacity: 0.9;">
+  Por favor aguarde!<br>
+  
+  Completado: {{loading_value}}%
+
+  <mat-spinner  [value]="loading_value" [mode]="'determinate'" style="margin:0 auto;top:30px"></mat-spinner>
+ <div style="bottom: 20px;margin:0 auto;position: absolute;left: 25%;right: 25%;">
+   Muchas gracias
+ </div>
+</div>
+
+
 <div  id="map">
      
      <button class="mapButton" mat-mini-fab color="primary" aria-label="Example icon button with a menu icon" [matMenuTriggerFor]="menu">
@@ -47,23 +64,23 @@
 
         <!-- (click)="startPaintGhost()" *ngIf="!MapInterval"  -->
 
-        <button mat-menu-item  [matMenuTriggerFor]="menuEnt">
+        <button mat-menu-item  *ngIf="!entrenamiento.started" [matMenuTriggerFor]="menuEnt">
           <mat-icon>pets</mat-icon>
           <span>Selecciona ruta Fantasma</span>
         </button>
-        <button mat-menu-item (click)="stopPaintGhost()" *ngIf="MapInterval" >
-            <mat-icon>stop</mat-icon>
-            <span>Parar</span>
+        <button mat-menu-item  (click)="clearGhost()" *ngIf="ghostLocations.length" >
+            <mat-icon>location_disabled</mat-icon>
+            <span>Quitar fantasma</span>
           </button>
         
 
         <button mat-menu-item *ngIf="seguirLimites" (click)="seguirLimites=!seguirLimites">
             <mat-icon>near_me_disabled</mat-icon>
-            <span>No seguir</span>
+            <span>No seguir marca</span>
           </button>
           <button mat-menu-item *ngIf="!seguirLimites" (click)="seguirLimites=!seguirLimites">
               <mat-icon>near_me</mat-icon>
-              <span>Seguir</span>
+              <span>Seguir marca</span>
             </button>
       </mat-menu>
 </div>

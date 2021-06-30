@@ -25,6 +25,7 @@ function reverse(s){
 }
 
 
+
 function editDistance(s1, s2) {
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
@@ -58,6 +59,7 @@ export class AppService implements OnInit {
 
     private subjectLocation = new Subject<any>();
     private subjectSteps = new Subject<any>();
+    private subjectLoading = new Subject<any>();
     private subjectAccel = new Subject<any>();
     private subjectAuth  = new Subject<any>();
     private subjectMessage =new Subject<any>();
@@ -67,6 +69,7 @@ export class AppService implements OnInit {
     public entrenamiento:any;
     public Entrenamientos=[];
     public getAcceration:boolean=false;
+    modelEntrenamiento={user:'',start:new Date().getTime(),stop:new Date().getTime(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad:'',velocidad_promedio:0,Locations:[]};
     constructor(
       public localSt:LocalStorageService,
       private router : Router,
@@ -74,23 +77,25 @@ export class AppService implements OnInit {
     ){
       
         console.log('Se construye  AppService!');
-      if(this.localSt.retrieve('entrenamientos')){
-        this.Entrenamientos=this.getEntrenamientos();
-      }
-      else{
-        this.localSt.store('entrenamientos',[]);
-      }
-        
+
+        this.usuario=this.localSt.retrieve('usuario');
+        if(!this.usuario){
+          this.usuario={nombre:'Sin definir'};
+        }
+        this.modelEntrenamiento= {user:this.usuario.nombre,start:new Date().getTime(),stop:new Date().getTime(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,velocidad:'',Locations:[]};
       if(this.localSt.retrieve('entrenamiento'))      
         this.entrenamiento=this.localSt.retrieve('entrenamiento');
       else
       {
-        this.entrenamiento={start:new Date(),stop:new Date(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
+        this.entrenamiento=this.modelEntrenamiento;
         this.localSt.store('entrenamiento',this.entrenamiento);
       }
+
     }
+    DB;
+    usuario;
     ngOnInit(){
-      console.log('Se Inicia  AppService!');     
+     //not init :$      
     }
     OpenFile(fileName){
       function success() {
@@ -142,45 +147,7 @@ export class AppService implements OnInit {
         console.log(error);
       });
     }
-    generateGpxFile(entrenamiento){
-      let trkpt="";
 
-      let head="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
-      "<gpx\n"+
-      "version=\"1.1\"\n"+
-      "creator=\"Tus Actividades - https://play.google.com/store/apps/details?id=com.actualsoft.jmap\"\n"+
-      "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+
-      "xmlns=\"http://www.topografix.com/GPX/1/1\"\n"+
-      "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\"\n"+
-      "xmlns:gpxtpx=\"http://www.garmin.com/xmlschemas/TrackPointExtension/v1\">\n"+
-      "<metadata>\n"+
-      "<link href=\"https://play.google.com/store/apps/details?id=com.actualsoft.jmap\">\n"+
-      "<text>Mis Actividades</text>\n"+
-      "</link>\n"+
-      "<time>"+new Date(entrenamiento.start).toISOString()+"</time>\n"+
-      "</metadata>\n"+
-      "<trk>\n"+
-      "<name>Entrenamiento de"+ entrenamiento.user+"</name>\n"+
-      "<trkseg>\n";
-      let _close="</trkseg>\n"+
-      "</trk>\n"+
-      "</gpx>\n";
-      
-      
-      entrenamiento.Locations.forEach((point)=>{
-        
-
-        trkpt+="<trkpt lat=\""+point.latitude+"\" lon=\""+point.longitude+"\">\n"+
-        "<ele>"+parseFloat(point.altitude).toFixed(2)+"</ele>\n"+
-        "<speed>"+parseFloat(point.speed).toFixed(2)+"</speed>\n"+
-        "<time>"+new Date(point.time).toISOString()+"</time>\n"+
-        "</trkpt>\n";
-        //"<course>"+parseFloat(point.bearing).toFixed(2)+"</course>\n"+
-
-      });
-
-      return head+trkpt+_close;
-    }
     GetExternalFile(){
       
       window.plugins.fileAssociation.getAssociatedData(null,
@@ -239,10 +206,24 @@ export class AppService implements OnInit {
     getSensor(){
       window.sensors.enableSensor("LIGHT"); 
       setInterval(() => {
-        window.sensors.getState((a)=>{console.log(a)}, (a)=>{console.log(a)});
+        //window.sensors.getState((a)=>{console.log(a)}, (a)=>{console.log(a)});
       },1000);
     }
+
     StartServiceMobile(){
+      this.openDB().subscribe((res)=>{
+        this.generateTables().subscribe((t)=>{
+          this.getEntrenamientos().subscribe((data)=>{
+            this.Entrenamientos=data;
+            this.afterStartServiceMobile();
+          });
+
+        });
+     
+     
+      });
+    }
+    afterStartServiceMobile(){
       this.getSensor();
       let config=this.localSt.retrieve('config');
       if(!config){
@@ -262,6 +243,7 @@ export class AppService implements OnInit {
           'debug':false,
           'stationaryRadius':2,
           'distanceFilter':2,
+          'forceStationaryUpdate':false,
           'interval':5000,
           'fastestInterval':3000,
           'activitiesInterval':5000,
@@ -324,15 +306,20 @@ export class AppService implements OnInit {
         BackgroundGeolocation.on('stationary', (stationaryLocation)=> {
           console.log("Stationary");
           console.log(stationaryLocation);
-          if(this.entrenamiento.started){
-            this.stopBackGroundGeoLocation();
-            setTimeout(() => {
-              this.startBackGroundGeoLocation().subscribe((result)=>{
-                console.log(result);
+          let gps_config=this.localSt.retrieve('gps_config');
+          if(gps_config.forceStationaryUpdate){
+            if(this.entrenamiento.started){
+              this.stopBackGroundGeoLocation().subscribe((res)=>{
+                setTimeout(() => {
+                  this.startBackGroundGeoLocation().subscribe((result)=>{
+                    console.log(result);
+                  });
+                }, 2000);
+                
               });
-            }, 1000*10);
+            }
           }
-          // handle stationary locations here
+            // handle stationary locations here
         });
         BackgroundGeolocation.checkStatus((status)=> {
           console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
@@ -392,16 +379,13 @@ export class AppService implements OnInit {
     }
    
     setEntrenamientoStart(){
-      /* this.entrenamiento.started=true;
-      this.entrenamiento.paused_time=0;
-      this.entrenamiento.paused=false;
-      this.entrenamiento.start=new Date().getTime();
-      this.entrenamiento.stop=""; */
       this.startBackGroundGeoLocation().subscribe(result=>{
         console.log("startBackGroundGeoLocation",result);
         if(result){
-
-          this.entrenamiento={paused_time:0,start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
+          
+          this.entrenamiento={user:this.usuario.nombre,paused_time:0, start:new Date().getTime(),stop:new Date().getTime(),started:true,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad:'',velocidad_promedio:0,Locations:[]};      
+          //this.entrenamiento=this.modelEntrenamiento;
+          this.entrenamiento.started=true;
           this.sendEntrenamiento('start');
           this.localSt.store('entrenamiento',this.entrenamiento);
         }
@@ -409,7 +393,10 @@ export class AppService implements OnInit {
       
     }
 
+
+
     setEntrenamientoPause(){
+
       this.entrenamiento.started=true;
       this.entrenamiento.paused=!this.entrenamiento.paused;     
       if(!this.entrenamiento.paused)
@@ -425,24 +412,220 @@ export class AppService implements OnInit {
       this.sendEntrenamiento('pause');
       this.localSt.store('entrenamiento',this.entrenamiento);
     }
+    deleteEntrenamiento(start,id_entrenamiento,IndexClick){
+      let arr=[];
+      this.Entrenamientos[IndexClick].play=false;
+      IndexClick=0;        
+      for(let x=0;x<this.Entrenamientos.length;x++){
+        if(id_entrenamiento){
+          if(this.Entrenamientos[x].id_entrenamiento!=id_entrenamiento){            
+            arr.push(this.Entrenamientos[x]);    
+          }
+          else{
+            this.dbDeleteEntrenamiento(this.Entrenamientos[x].id_entrenamiento);
+          }
+        }
+        else{
 
-    setEntrenamientoStop(){
-      if(!this.entrenamiento.started) return;
-      this.entrenamiento.started=false;
-      this.entrenamiento.stop=new Date().getTime();
-      this.Entrenamientos=this.localSt.retrieve('entrenamientos');
-      this.Entrenamientos.push(this.entrenamiento);
-      this.localSt.store('entrenamientos',this.Entrenamientos);
-      this.entrenamiento={start:new Date(),stop:new Date(),started:false,paused:false,pasos:0,pasos_acumulados:0,distancia:"",velocidad_promedio:0,Locations:[]};
-      this.localSt.store('entrenamiento',this.entrenamiento);      
-      this.stopBackGroundGeoLocation();
-      this.sendEntrenamiento('stop');
+          if(this.Entrenamientos[x].start!=start){            
+            arr.push(this.Entrenamientos[x]);    
+          }
+          else{
+            if(this.Entrenamientos[x].id_entrenamiento)
+            this.dbDeleteEntrenamiento(this.Entrenamientos[x].id_entrenamiento);
+          }
+        }
+
+      }
+      this.Entrenamientos=arr;   
+      return  this.Entrenamientos;
+      //this.appService.localSt.store('entrenamientos',this.Entrenamientos);
       
     }
+    showInfo(){
+      let inner= `
+      <div class="MiDivCenter"> 
+      <mat-icon _ngcontent-sbh-c158="" role="img" class="mat-icon notranslate material-icons mat-icon-no-color" aria-hidden="true" data-mat-icon-type="font">favorite</mat-icon>
+      <h2>HGOLA NONO</h2>
+      </div>
+      `;
 
+      //document.getElementById('divInfo').innerHTML=inner;
+    }
+    generateGpxFile(entrenamiento){
+      let trkpt="";
 
+      let head="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+      "<gpx\n"+
+      "version=\"1.1\"\n"+
+      "creator=\"Tus Actividades - https://play.google.com/store/apps/details?id=com.actualsoft.jmap\"\n"+
+      "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+
+      "xmlns=\"http://www.topografix.com/GPX/1/1\"\n"+
+      "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\"\n"+
+      "xmlns:gpxtpx=\"http://www.garmin.com/xmlschemas/TrackPointExtension/v1\">\n"+
+      "<metadata>\n"+
+      "<link href=\"https://play.google.com/store/apps/details?id=com.actualsoft.jmap\">\n"+
+      "<text>Mis Actividades</text>\n"+
+      "</link>\n"+
+      "<time>"+new Date(entrenamiento.start).toISOString()+"</time>\n"+
+      "</metadata>\n"+
+      "<trk>\n"+
+      "<name>Entrenamiento de"+ entrenamiento.user+"</name>\n"+
+      "<trkseg>\n";
+      let _close="</trkseg>\n"+
+      "</trk>\n"+
+      "</gpx>\n";
+      
+      
+      entrenamiento.Locations.forEach((point)=>{
+        
 
-   
+        trkpt+="<trkpt lat=\""+point.latitude+"\" lon=\""+point.longitude+"\">\n"+
+        "<ele>"+parseFloat(point.altitude).toFixed(2)+"</ele>\n"+
+        "<speed>"+parseFloat(point.speed).toFixed(2)+"</speed>\n"+
+        "<time>"+new Date(point.time).toISOString()+"</time>\n"+
+        "</trkpt>\n";
+        //"<course>"+parseFloat(point.bearing).toFixed(2)+"</course>\n"+
+
+      });
+
+      return head+trkpt+_close;
+    }
+    setEntrenamientoStop(): Observable<any>{
+      let subjectData  = new Subject<any>();
+      if(!this.entrenamiento.started){
+        setTimeout(() => {          
+          return subjectData.next(true);
+        }, 1);
+       // return subjectData.next(true);
+      }
+      else{
+
+        this.entrenamiento.started=false;
+        this.entrenamiento.stop=new Date().getTime();
+        //this.Entrenamientos=this.localSt.retrieve('entrenamientos');
+        
+        
+        this.localSt.store('entrenamiento',this.entrenamiento);      
+        this.stopBackGroundGeoLocation();
+        this.sendEntrenamiento('stop');
+        this.dbInsertEntrenamiento().subscribe((id_entrenamiento)=>{
+          this.getEntrenamientos().subscribe((data)=>{
+            this.Entrenamientos=data;
+            this.entrenamiento=this.modelEntrenamiento;
+            return subjectData.next(true);
+          });
+        });
+        //this.localSt.store('entrenamientos',this.Entrenamientos);
+      } 
+      return subjectData.asObservable();
+    }
+
+    openDB() : Observable<any>{
+      let subjectData  = new Subject<any>();
+      window.sqlitePlugin.openDatabase({ name: 'misactividades.db', location: 'default' },  (db) =>{
+        this.DB=db;
+        return subjectData.next(true);
+        
+      });
+      return subjectData.asObservable();
+    }
+    generateTables(): Observable<any>{
+      let subjectData  = new Subject<any>();
+      const sql = `
+      CREATE TABLE IF NOT EXISTS entrenamientos (
+          id_entrenamiento INTEGER PRIMARY KEY AUTOINCREMENT,
+          distancia INTEGER DEFAULT 0,
+          pasos INTEGER  DEFAULT 0,
+          externo INTEGER  DEFAULT 0,
+          pasos_acumulados INTEGER  DEFAULT 0,
+          start INTEGER DEFAULT '',
+          stop INTEGER DEFAULT '',          
+          user text DEFAULT '',
+          velocidad_promedio INTEGER DEFAULT 0,
+          paused_time INTEGER DEFAULT 0,
+          start_latitude REAL  DEFAULT 0,
+          start_longitude REAL  DEFAULT 0,
+          end_latitude REAL  DEFAULT 0,
+          end_longitude REAL  DEFAULT 0
+    
+      );`;
+    
+      const sql2=`CREATE TABLE IF NOT EXISTS entrenamientos_locations (
+              id_entrenamiento INTEGER DEFAULT 0,
+              accuracy INTEGER DEFAULT 0,
+              altitude REAL  DEFAULT 0,
+              latitude REAL  DEFAULT 0,
+              longitude REAL  DEFAULT 0,
+              speed REAL  DEFAULT 0,
+              bearing REAL  DEFAULT 0,    
+              time INTEGER DEFAULT ''
+          );
+      `;
+      this.DB.transaction((tx)=> {
+        tx.executeSql(sql);
+        tx.executeSql(sql2);
+        
+      },(error)=>{
+        console.log(error);
+      },(success)=>{
+        console.log(success);
+        return subjectData.next(true);
+      });
+      
+      return subjectData.asObservable();
+    }
+    dbDeleteEntrenamiento(id_entrenamiento){
+      console.log("dbDeleteEntrenamiento()",id_entrenamiento);
+      this.DB.executeSql("delete from entrenamientos WHERE id_entrenamiento=?",[id_entrenamiento]);
+      this.DB.executeSql("delete from entrenamientos_locations WHERE id_entrenamiento=?",[id_entrenamiento]);
+    }
+    dbGetEntrenamientos() : Observable<any>{
+      let subjectData  = new Subject<any>();
+      let arr=[];
+      this.DB.executeSql("select * from entrenamientos",[],(rs)=>{
+        
+        for(let x=0;x<rs.rows.length;x++)
+        {
+         arr.push(rs.rows.item(x));
+        }
+        return subjectData.next(arr);
+      },(a)=>{console.log(a)});
+      return subjectData.asObservable();
+    }
+
+    dbGetEntrenamiento(id_entrenamiento) : Observable<any>{
+      let subjectData  = new Subject<any>();
+      let arr=[];
+      this.DB.executeSql("select * from entrenamientos WHERE id_entrenamiento=?",[id_entrenamiento],(rs)=>{
+        
+        for(let x=0;x<rs.rows.length;x++)
+        {
+         arr.push(rs.rows.item(x));
+        }
+        let Entrenamiento_arr=this.generateEntrenamientos(arr);
+        this.dbGetEntrenamientosLocations(id_entrenamiento).subscribe((Loc)=>{
+          Entrenamiento_arr[0].Locations=Loc;
+          return subjectData.next(Entrenamiento_arr[0]);
+        });
+
+      },(a)=>{console.log(a)});
+      return subjectData.asObservable();
+    }
+
+    dbGetEntrenamientosLocations(id_entrenamiento) : Observable<any>{
+      let subjectData  = new Subject<any>();
+      let arr=[];
+      this.DB.executeSql("select * from entrenamientos_locations WHERE id_entrenamiento=?",[id_entrenamiento],(rs)=>{
+        
+        for(let x=0;x<rs.rows.length;x++)
+        {
+         arr.push(rs.rows.item(x));
+        }
+        return subjectData.next(arr);
+      },(a)=>{console.log(a)});
+      return subjectData.asObservable();
+    }
     
     startBackGroundGeoLocation() : Observable<any>{
       let subjectAuth  = new Subject<any>();
@@ -474,7 +657,9 @@ export class AppService implements OnInit {
        return subjectAuth.asObservable();
      }
 
-     stopBackGroundGeoLocation(){
+     stopBackGroundGeoLocation():Observable<any>{
+      let subjectAuth  = new Subject<any>();
+
        BackgroundGeolocation.checkStatus((status)=> {
          console.log('[INFO] BackgroundGeolocation service is running', status.isRunning);
          console.log('[INFO] BackgroundGeolocation services enabled', status.locationServicesEnabled);
@@ -485,11 +670,13 @@ export class AppService implements OnInit {
            BackgroundGeolocation.stop(); //triggers start on start event
            pedometer.stopPedometerUpdates((success)=>{
              console.log("stop",success);
-           }, (error)=>{
-             console.log("stop",error);
-           });
-         }
+            }, (error)=>{
+              console.log("stop",error);
+            });
+          }
+          return subjectAuth.next(true);
        });
+       return subjectAuth.asObservable();
      }
      getEntrenamiento(propiedad?){
       if(propiedad)
@@ -656,10 +843,15 @@ export class AppService implements OnInit {
     clearMessages() {
         this.subjectLocation.next();    
     }
-
+    sendLoading(value: any) {
+      this.subjectLoading.next({ value });
+  }
     onStepsChange(): Observable<any> {
         return this.subjectSteps.asObservable();
     }
+    onLoadingChange(): Observable<any> {
+      return this.subjectLoading.asObservable();
+  }
     onMessageChange(): Observable<any> {
       return this.subjectMessage.asObservable();
   }
@@ -727,6 +919,76 @@ export class AppService implements OnInit {
           }
         });
       }
+      dbInsertEntrenamiento(entrenamiento?): Observable<any>{
+        let subjectData  = new Subject<any>();
+      let e;
+      if(entrenamiento)
+        e=entrenamiento;
+      else
+         e=this.entrenamiento;
+
+      let  arr=[];
+      let s_lat=0;
+      let s_lng=0;
+      let e_lat=0;
+      let e_lng=0;
+      if(e.Locations && e.Locations.length){
+        s_lat = e.Locations[0].latitude;
+        s_lng = e.Locations[0].longitude;
+
+        e_lat = e.Locations[e.Locations.length-1].latitude;
+        e_lng = e.Locations[e.Locations.length-1].longitude;
+      }
+      let seg=(e.stop-e.start-(e.paused_time*1000))/1000;
+      if(seg>10)
+      {
+        this.DB.executeSql('INSERT INTO entrenamientos (distancia,pasos,pasos_acumulados,start,stop,user,externo,velocidad_promedio,paused_time,start_latitude,start_longitude,end_latitude,end_longitude) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        [ e.distancia,
+          e.pasos,
+          e.pasos_acumulados,
+          e.start,
+          e.stop,          
+          e.user,
+          e.externo,
+          e.velocidad_promedio,
+          e.paused_time,
+          s_lat,
+          s_lng,
+          e_lat,
+          e_lng
+        ],(res)=>{
+        console.log("insert ent",res);    
+          let id_entrenamiento=res.insertId;
+          let total =e.Locations.length;
+          let index=0;
+          if(total==0){
+            return subjectData.next(id_entrenamiento);
+          }
+          else
+          {
+            e.Locations.forEach(l=> {              
+              
+              this.DB.executeSql('INSERT into entrenamientos_locations values (?,?,?,?,?,?,?,?)',
+              [id_entrenamiento, l.accuracy, l.altitude, l.latitude, l.longitude, l.speed, l.bearing, l.time],(res2)=>{
+                  console.log(res2);
+                  index++;
+                  if(index==total){
+                    return subjectData.next(id_entrenamiento);
+                  }
+                  this.sendLoading(parseInt(((index/total) *100).toFixed(0)));
+
+              });
+            });  
+          }
+        });
+      }
+      else{
+        setTimeout(() => {
+          return subjectData.next(0);
+        }, 1);
+      }
+        return subjectData.asObservable();
+      }
       textToSpeech(text,rate=1){
         
         TTS
@@ -741,66 +1003,60 @@ export class AppService implements OnInit {
             console.log(reason);
         });
       }
-
-      getEntrenamientos(location?,onlyInArea?:boolean){
-        let tmp=this.localSt.retrieve('entrenamientos');
+      generateEntrenamientos(tmp,location?,onlyInArea?:boolean){
         let Entrenamientos=[];
         tmp.forEach(entrenamiento => {
-        //  if(element.distancia)
-  /*           Entrenamientos.push(element );
+          //  if(element.distancia)
+          /*           Entrenamientos.push(element );
         });
-       
-       Entrenamientos.forEach(entrenamiento => { */
-         let fecha=new Date(entrenamiento.start);
-         entrenamiento.fecha=moment(fecha).format('LL');
-         entrenamiento.fecha_corta=moment(fecha).format('MMM D');
-         entrenamiento.pasos=entrenamiento.pasos+entrenamiento.pasos_acumulados;
-         entrenamiento.inArea=false;
-         entrenamiento.saved=true;
-         let miliseg=entrenamiento.stop-entrenamiento.start-(entrenamiento.paused_time*1000);
-         entrenamiento.tiempo= new Date(miliseg).toISOString().substr(11, 8);
-         if(entrenamiento.Locations && entrenamiento.Locations.length && location){
-           let LaPos=entrenamiento.Locations[0];
-           let mts=this.getDistanceFromLatLonInKm(LaPos.latitude,LaPos.longitude,location.latitude,location.longitude)*1000;
-           if(mts<80)
-              entrenamiento.inArea=true;
-         }
-
-        let kmTotales=0;
-        let i=0;
-        let _velocidad_promedio=0;
-
-    /*REMOVER LUEGO */
-         for(let x=0;x<entrenamiento.Locations.length;x++){
-           let pos1=entrenamiento.Locations[x];
-           let pos2=entrenamiento.Locations[x+1];
-           if(pos1.speed)
-           _velocidad_promedio+=pos1.speed;
-           //Medir Distancia 
-           
-           if((x+1)<entrenamiento.Locations.length){         
-              kmTotales+=this.getDistanceFromLatLonInKm(pos1.latitude,pos1.longitude,pos2.latitude,pos2.longitude);
+        
+        Entrenamientos.forEach(entrenamiento => { */
+          try{            
+            let fecha=new Date(entrenamiento.start);
+            entrenamiento.fecha=moment(fecha).format('LL');
+            entrenamiento.fecha_corta=moment(fecha).format('MMM D');
+            entrenamiento.pasos=entrenamiento.pasos+entrenamiento.pasos_acumulados;
+            entrenamiento.inArea=false;
+            entrenamiento.saved=true;
+            let miliseg=entrenamiento.stop-entrenamiento.start-(entrenamiento.paused_time*1000);
+            entrenamiento.tiempo= new Date(miliseg).toISOString().substr(11, 8);
+            if(location && entrenamiento.start_latitude && entrenamiento.start_longitude){
+             
+              let mts=this.getDistanceFromLatLonInKm(entrenamiento.start_latitude,entrenamiento.start_longitude,location.latitude,location.longitude)*1000;
+              if(mts<80)
+                entrenamiento.inArea=true;
             }
-          }
-    /*REMOVER LUEGO */
-              
-         entrenamiento.velocidad_promedio=_velocidad_promedio;
-         entrenamiento.distancia=kmTotales.toFixed(2);
-         //entrenamiento.velocidad=entrenamiento.velocidad_promedio/3.6;
-         entrenamiento.velocidad=(entrenamiento.velocidad_promedio/1000*3.6).toFixed(2)+' K/h';
-         if(onlyInArea==true){
-          if(entrenamiento.inArea==true){
-            Entrenamientos.push(entrenamiento);
-          }
-         }
-         else{
-          Entrenamientos.push(entrenamiento);
-         }
         
-        
-       });
-       console.log(Entrenamientos);
-       return Entrenamientos;
+            entrenamiento.velocidad=(entrenamiento.velocidad_promedio/1000*3.6).toFixed(2)+' K/h';
+            if(onlyInArea==true){
+              if(entrenamiento.inArea==true){
+                Entrenamientos.push(entrenamiento);
+              }
+            }
+            else{
+              Entrenamientos.push(entrenamiento);
+            }
+        }
+        catch(e) {
+          console.log(e);
+          console.log(entrenamiento);
+        }
+        });
+        return Entrenamientos;
+      }
+
+      getEntrenamientos(location?,onlyInArea?:boolean): Observable<any>{
+        let subjectData  = new Subject<any>();
+        //let tmp=this.localSt.retrieve('entrenamientos');
+        this.dbGetEntrenamientos().subscribe((tmp)=>{
+            let Entrenamientos=this.generateEntrenamientos(tmp,location,onlyInArea);
+
+            console.log(Entrenamientos);
+            return subjectData.next(Entrenamientos);
+
+          });
+          return subjectData.asObservable();
+
       }
       
       setBackgroundGeolocationTitle(title){
