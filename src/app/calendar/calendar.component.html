@@ -1,4 +1,21 @@
+<div *ngIf="loading" style="height: 100%;width: 100%; position:absolute;z-index: 2000;background-color: grey;opacity: 0.5; display: flex; 
+justify-content: center; 
+align-items: center;
+">
+</div>
+<div class="myDivInfo"  *ngIf="loading"  style="opacity: 0.9;">
+  Por favor aguarde!<br>
+  
+  Completado: {{loading_value}}%
+
+  <mat-spinner  [value]="loading_value" [mode]="'determinate'" style="margin:0 auto;top:30px"></mat-spinner>
+ <div style="bottom: 20px;margin:0 auto;position: absolute;left: 25%;right: 25%;">
+   Muchas gracias
+ </div>
+</div>
 <div id="calendarContent" style="overflow-y: auto;">
+  
+
 <div  [hidden]="!verMapa">
     <div   id="map_calendar">
      
@@ -9,45 +26,46 @@
 
    </div>
 </div>
-<div *ngIf="entrenamientoLocations">
-    <div style="position: absolute;">{{startTime}}</div>    
-    <div style="position: absolute;left:40%">{{ghostTimeStr}}</div>    
-    
-    <div style="position: absolute;right: 13%;">{{endTime}}</div>
-    <!-- [displayWith]="formatLabel" 
-        [thumbLabel]="true"
-        (change)="SliderChange($event)"
-    -->
-    <mat-slider
-    
-    style="width: 85%;z-index: 20000;"
-    [disabled]="false"
-    [invert]="false"
-    
-    [max]="entrenamientoLocations.length"
-    [ngModel]="SliderValue"
-    (input)="inputSlider($event)"
-    (onTouched)="onTouched($event)"
-    [min]="1"
-    [step]="1"
-    [tickInterval]="1"
-    
-    [vertical]="false"
-    aria-labelledby="example-name-label">
+<div *ngIf="entrenamientoLocations.length" style="position: relative;width: 100%;padding-top: 10px;
+background-color: darkslateblue;">
+  <div style="position: absolute;">{{startTime}}</div>    
+  <div style="position: absolute;left:40%">{{ghostTimeStr}}</div>    
+  
+  <div style="position: absolute;right: 13%;">{{endTime}}</div>
+  <!-- [displayWith]="formatLabel" 
+      [thumbLabel]="true"
+      (change)="SliderChange($event)"
+  -->
+  <mat-slider
+  
+  style="width: 86%;z-index: 2000;"
+  [disabled]="false"
+  [invert]="false"
+  
+  [max]="entrenamientoLocations.length"
+  [ngModel]="SliderValue"
+  (input)="inputSlider($event)"
+  (onTouched)="onTouched($event)"
+  [min]="1"
+  [step]="1"
+  [tickInterval]="1"
+  
+  [vertical]="false"
+  aria-labelledby="example-name-label">
 </mat-slider>
-<button style="position: absolute;right: 10px;     margin-top: 5px;" mat-mini-fab color="primary" aria-label="Example icon button with a menu icon" [matMenuTriggerFor]="menu">
-    <mat-icon>speed</mat-icon>
+<button style="position: absolute; right: 10px; margin-top: 5px;" mat-mini-fab color="primary" aria-label="Example icon button with a menu icon" [matMenuTriggerFor]="menu">
+  <mat-icon>speed</mat-icon>
+</button>
+<mat-menu #menu="matMenu">
+
+    
+
+  <button mat-menu-item *ngFor="let x of [1,8,16,32,50]" (click)="this.ghostSpeed=x">
+    <mat-icon>fast_forward</mat-icon>
+    <span>Velocidad x {{x}}</span>
   </button>
-  <mat-menu #menu="matMenu">
 
-      
-
-    <button mat-menu-item *ngFor="let x of [1,8,16,32,50]" (click)="this.ghostSpeed=x">
-      <mat-icon>fast_forward</mat-icon>
-      <span>Velocidad x {{x}}</span>
-    </button>
-
-  </mat-menu>
+</mat-menu>
 </div>
 
 <div style="height:200px;overflow-y: scroll;" id="listContainer">
@@ -102,7 +120,7 @@
           <mat-icon mat-list-icon>save</mat-icon>
           <span>Guardar</span>            
       </button>  
-        <button mat-button mat-raised-button (click)="delete(entrenamiento.start)" *ngIf="!entrenamiento.play" color="warn" >
+        <button mat-button mat-raised-button (click)="delete(entrenamiento.start,entrenamiento.id_entrenamiento,index)" *ngIf="!entrenamiento.play" color="warn" >
                 <mat-icon mat-list-icon>delete</mat-icon>
             
         </button>
